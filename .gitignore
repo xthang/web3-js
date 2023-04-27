@@ -4,3 +4,7 @@ misc/**
 
 **/*.swp
 dist/*.gz
+
+############# BUILD OUTPUT
+types/
+dist/
