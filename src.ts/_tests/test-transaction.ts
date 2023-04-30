@@ -1,9 +1,10 @@
 import assert from "assert";
-import { loadTests } from "./utils.js";
-import type { TestCaseTransaction, TestCaseTransactionTx } from "./types.js";
+import { loadTests } from "./utils";
+import type { TestCaseTransaction, TestCaseTransactionTx } from "./types";
 
 
-import { isError, Transaction } from "../index.js";
+import { isError, Transaction } from "../index";
+import { ChainNamespace } from "../providers/network";
 
 
 const BN_0 = BigInt(0);
@@ -23,7 +24,7 @@ describe("Tests Unsigned Transaction Serializing", function() {
             // Use the testcase sans the chainId for a legacy test
             if (txData.chainId != null && parseInt(txData.chainId) != 0) { txData.chainId = "0x00"; }
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, txData.chainNamespace);
             assert.equal(tx.unsignedSerialized, test.unsignedLegacy, "unsignedLegacy");
         });
     }
@@ -39,7 +40,7 @@ describe("Tests Unsigned Transaction Serializing", function() {
                 maxPriorityFeePerGas: undefined
             });
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.unsignedSerialized, test.unsignedEip155, "unsignedEip155");
         });
     }
@@ -52,7 +53,7 @@ describe("Tests Unsigned Transaction Serializing", function() {
                 maxPriorityFeePerGas: undefined
             });
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.unsignedSerialized, test.unsignedBerlin, "unsignedBerlin");
         });
     }
@@ -60,7 +61,7 @@ describe("Tests Unsigned Transaction Serializing", function() {
     for (const test of tests) {
         it(`serialized unsigned London transaction: ${ test.name }`, function() {
             const txData = Object.assign({ }, test.transaction, { type: 2 });
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.unsignedSerialized, test.unsignedLondon, "unsignedLondon");
         });
     }
@@ -82,7 +83,7 @@ describe("Tests Signed Transaction Serializing", function() {
             // Use the testcase sans the chainId for a legacy test
             if (txData.chainId != null && parseInt(txData.chainId) != 0) { txData.chainId = "0x00"; }
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.serialized, test.signedLegacy, "signedLegacy");
         });
     }
@@ -98,7 +99,7 @@ describe("Tests Signed Transaction Serializing", function() {
                 signature: test.signatureEip155
              });
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.serialized, test.signedEip155, "signedEip155");
         });
     }
@@ -111,7 +112,7 @@ describe("Tests Signed Transaction Serializing", function() {
                 maxPriorityFeePerGas: undefined
             }, { signature: test.signatureBerlin });
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.serialized, test.signedBerlin, "signedBerlin");
         });
     }
@@ -123,7 +124,7 @@ describe("Tests Signed Transaction Serializing", function() {
                 signature: test.signatureLondon
             });
 
-            const tx = Transaction.from(txData);
+            const tx = Transaction.from(txData, ChainNamespace.eip155);
             assert.equal(tx.serialized, test.signedLondon, "signedLondon");
         });
     }
@@ -179,7 +180,7 @@ describe("Tests Unsigned Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses unsigned legacy transaction: ${ test.name }`, function() {
-            const tx = Transaction.from(test.unsignedLegacy);
+            const tx = Transaction.from(test.unsignedLegacy, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -194,7 +195,7 @@ describe("Tests Unsigned Transaction Parsing", function() {
     for (const test of tests) {
         if (!test.unsignedEip155) { continue; }
         it(`parses unsigned EIP-155 transaction: ${ test.name }`, function() {
-            const tx = Transaction.from(test.unsignedEip155);
+            const tx = Transaction.from(test.unsignedEip155, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -207,7 +208,7 @@ describe("Tests Unsigned Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses unsigned Berlin transaction: ${ test.name }`, function() {
-            const tx = Transaction.from(test.unsignedBerlin);
+            const tx = Transaction.from(test.unsignedBerlin, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -219,7 +220,7 @@ describe("Tests Unsigned Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses unsigned London transaction: ${ test.name }`, function() {
-            const tx = Transaction.from(test.unsignedLondon);
+            const tx = Transaction.from(test.unsignedLondon, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.gasPrice = null;
@@ -234,7 +235,7 @@ describe("Tests Signed Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses signed legacy transaction: ${ test.name }`, function() {
-            let tx = Transaction.from(test.signedLegacy);
+            let tx = Transaction.from(test.signedLegacy, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -263,7 +264,7 @@ describe("Tests Signed Transaction Parsing", function() {
     for (const test of tests) {
         if (!test.unsignedEip155) { continue; }
         it(`parses signed EIP-155 transaction: ${ test.name }`, function() {
-            let tx = Transaction.from(test.signedEip155);
+            let tx = Transaction.from(test.signedEip155, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -290,7 +291,7 @@ describe("Tests Signed Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses signed Berlin transaction: ${ test.name }`, function() {
-            let tx = Transaction.from(test.signedBerlin);
+            let tx = Transaction.from(test.signedBerlin, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = null;
@@ -316,7 +317,7 @@ describe("Tests Signed Transaction Parsing", function() {
 
     for (const test of tests) {
         it(`parses signed London transaction: ${ test.name }`, function() {
-            let tx = Transaction.from(test.signedLondon);
+            let tx = Transaction.from(test.signedLondon, ChainNamespace.eip155);
 
             const expected = addDefaults(test.transaction);
             expected.gasPrice = null;
@@ -380,7 +381,7 @@ describe("Tests Transaction Parameters", function() {
             assert.throws(() => {
                 // The access list is a single value: 0x09 instead of
                 // structured data
-                const result = Transaction.from(data);
+                const result = Transaction.from(data, ChainNamespace.eip155);
                 console.log(result);
             }, (error: any) => {
                 return (isError(error, "INVALID_ARGUMENT") &&

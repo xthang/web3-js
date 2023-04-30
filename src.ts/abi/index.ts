@@ -7,14 +7,14 @@
 
 
 //////
-export { AbiCoder } from "./abi-coder.js";
+export { AbiCoder } from "./abi-coder";
 
-export { decodeBytes32String, encodeBytes32String } from "./bytes32.js";
+export { decodeBytes32String, encodeBytes32String } from "./bytes32";
 
 export {
     ConstructorFragment, ErrorFragment, EventFragment, FallbackFragment,
     Fragment, FunctionFragment, NamedFragment, ParamType, StructFragment,
-} from "./fragments.js";
+} from "./fragments";
 
 export {
     checkResultErrors,
@@ -22,16 +22,16 @@ export {
     Interface,
     ErrorDescription, LogDescription, TransactionDescription,
     Result
-} from "./interface.js";
+} from "./interface";
 
-export { Typed } from "./typed.js";
+export { Typed } from "./typed";
 
 export type {
     JsonFragment, JsonFragmentType,
     FormatType, FragmentType, ParamTypeWalkAsyncFunc, ParamTypeWalkFunc
-} from "./fragments.js";
+} from "./fragments";
 
 export type {
     InterfaceAbi,
-} from "./interface.js";
+} from "./interface";
 

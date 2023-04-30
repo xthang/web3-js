@@ -1,16 +1,14 @@
-import { getAddress, resolveAddress } from "../address/index.js";
-import { hashMessage, TypedDataEncoder } from "../hash/index.js";
-import { AbstractSigner } from "../providers/index.js";
-import { computeAddress, Transaction } from "../transaction/index.js";
-import {
-    defineProperties, resolveProperties, assert, assertArgument
-} from "../utils/index.js";
-
-import type { SigningKey } from "../crypto/index.js";
-import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
-import type { Provider, TransactionRequest } from "../providers/index.js";
-import type { TransactionLike } from "../transaction/index.js";
-
+import { getAddress, resolveAddressToHex } from "../address/index";
+import type { SigningKey } from "../crypto/index";
+import { hashMessage, TypedDataEncoder } from "../hash/index";
+import type { TypedDataDomain, TypedDataField } from "../hash/index";
+import { AbstractEip155Signer } from "../providers/index";
+import type { Provider, TransactionRequest } from "../providers/index";
+import { ChainNamespace } from "../providers/network";
+import { computeAddress, Transaction } from "../transaction/index";
+import type { TransactionLike } from "../transaction/index";
+import { resolveProperties, assert, assertArgument } from "../utils/index";
+import { IWallet } from "./wallet";
 
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
@@ -23,7 +21,7 @@ import type { TransactionLike } from "../transaction/index.js";
  *  This class may be of use for those attempting to implement
  *  a minimal Signer.
  */
-export class BaseWallet extends AbstractSigner {
+export class BaseEip155Wallet extends AbstractEip155Signer implements IWallet {
     /**
      *  The wallet address.
      */
@@ -41,12 +39,11 @@ export class BaseWallet extends AbstractSigner {
     constructor(privateKey: SigningKey, provider?: null | Provider) {
         super(provider);
 
-        assertArgument(privateKey && typeof(privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
+        assertArgument(privateKey && typeof (privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
 
         this.#signingKey = privateKey;
 
-        const address = computeAddress(this.signingKey.publicKey);
-        defineProperties<BaseWallet>(this, { address });
+        this.address = computeAddress(this.signingKey.publicKey, provider?.chainNamespace ?? ChainNamespace.eip155)
     }
 
     // Store private values behind getters to reduce visibility
@@ -64,29 +61,29 @@ export class BaseWallet extends AbstractSigner {
 
     async getAddress(): Promise<string> { return this.address; }
 
-    connect(provider: null | Provider): BaseWallet {
-        return new BaseWallet(this.#signingKey, provider);
+    connect(provider: null | Provider): BaseEip155Wallet {
+        return new BaseEip155Wallet(this.#signingKey, provider);
     }
 
     async signTransaction(tx: TransactionRequest): Promise<string> {
 
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
-            to: (tx.to ? resolveAddress(tx.to, this.provider): undefined),
-            from: (tx.from ? resolveAddress(tx.from, this.provider): undefined)
+            to: (tx.to ? resolveAddressToHex(tx.to, this.provider!.chainNamespace, this.provider) : undefined),
+            from: (tx.from ? resolveAddressToHex(tx.from, this.provider!.chainNamespace, this.provider) : undefined)
         });
 
         if (to != null) { tx.to = to; }
         if (from != null) { tx.from = from; }
 
         if (tx.from != null) {
-            assertArgument(getAddress(<string>(tx.from)) === this.address,
+            assertArgument(getAddress(<string>(tx.from), this.provider!.chainNamespace) === this.address,
                 "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
 
         // Build the transaction
-        const btx = Transaction.from(<TransactionLike<string>>tx);
+        const btx = Transaction.from(<TransactionLike<string>>tx, this.provider!.chainNamespace);
         btx.signature = this.signingKey.sign(btx.unsignedHash);
 
         return btx.serialized;

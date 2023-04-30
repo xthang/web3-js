@@ -8,3 +8,5 @@ dist/*.gz
 ############# BUILD OUTPUT
 types/
 dist/
+lib.commonjs/
+lib.esm/

@@ -1,10 +1,10 @@
 import fs from "fs";
 
-import { getLogs } from "./utils/git.js";
-import { loadJson } from "./utils/json.js";
-import { resolve } from "./utils/path.js";
-import { getVersions } from "./utils/npm.js";
-import { getDateTime } from "./utils/date.js";
+import { getDateTime } from "./utils/date";
+import { getLogs } from "./utils/git";
+import { loadJson } from "./utils/json";
+import { getVersions } from "./utils/npm";
+import { resolve } from "./utils/path";
 
 function repeat(c: string, length: number): string {
     if (c.length === 0) { throw new Error("too short"); }
@@ -63,7 +63,7 @@ type PresentVersion = {
     {
         const content = fs.readFileSync(resolve("CHANGELOG.md")).toString();
         for (const line of content.split("\n")) {
-            let match = line.match(/^ethers\/v(\S+)\s/);
+            const match = line.match(/^ethers\/v(\S+)\s/);
             if (match) {
                 present.push({ version: match[1], body: [ line ] });
             } else {
@@ -175,10 +175,10 @@ type PresentVersion = {
         for (const change of ver.changes) {
             let line = `  - ${ change.message } (`;
             line += change.issues.map((i) => {
-                return `[#${ i }](https:/\/github.com/ethers-io/ethers.js/issues/${ i })`;
+                return `[#${ i }](https://github.com/ethers-io/ethers.js/issues/${ i })`;
             }).join(", ");
             if (change.issues.length) { line += "; "; }
-            line += `[${ change.commit.substring(0, 7) }](https:/\/github.com/ethers-io/ethers.js/commit/${ change.commit })).`;
+            line += `[${ change.commit.substring(0, 7) }](https://github.com/ethers-io/ethers.js/commit/${ change.commit })).`;
             output.push(line)
         }
         output.push("");

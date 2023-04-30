@@ -3,7 +3,7 @@ import assert from "assert";
 import {
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs
-} from "../index.js";
+} from "../index";
 
 export type TestCaseBadString = {
     name: string,

@@ -1,11 +1,9 @@
 
-import { keccak256 } from "../crypto/index.js";
+import { ens_normalize } from "@adraffy/ens-normalize";
+import { keccak256_hex } from "../crypto/index";
 import {
     concat, hexlify, assertArgument, toUtf8Bytes
-} from "../utils/index.js";
-
-
-import { ens_normalize } from "@adraffy/ens-normalize";
+} from "../utils/index";
 
 const Zeros = new Uint8Array(32);
 Zeros.fill(0);
@@ -56,7 +54,7 @@ export function ensNormalize(name: string): string {
 export function isValidName(name: string): name is string {
     try {
         return (ensNameSplit(name).length !== 0);
-    } catch (error) { }
+    } catch (error) { /* empty */ }
     return false;
 }
 
@@ -70,7 +68,7 @@ export function namehash(name: string): string {
 
     const comps = ensNameSplit(name);
     while (comps.length) {
-        result = keccak256(concat([ result, keccak256(<Uint8Array>(comps.pop()))] ));
+        result = keccak256_hex(concat([ result, keccak256_hex(<Uint8Array>(comps.pop()))] ));
     }
 
     return hexlify(result);

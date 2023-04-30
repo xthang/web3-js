@@ -1,11 +1,11 @@
-import { isError } from "../utils/index.js";
+import { isError } from "../utils/index";
 
-import { PollingEventSubscriber } from "./subscriber-polling.js";
+import { PollingEventSubscriber } from "./subscriber-polling";
 
-import type { AbstractProvider, Subscriber } from "./abstract-provider.js";
-import type { Network } from "./network.js";
-import type { EventFilter } from "./provider.js";
-import type { JsonRpcApiProvider } from "./provider-jsonrpc.js";
+import type { AbstractProvider, Subscriber } from "./abstract-provider";
+import type { Network } from "./network";
+import type { EventFilter } from "./provider";
+import type { JsonRpcApiProvider } from "./provider-jsonrpc";
 
 function copy(obj: any): any {
     return JSON.parse(JSON.stringify(obj));

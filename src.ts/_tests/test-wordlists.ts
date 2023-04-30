@@ -1,10 +1,10 @@
 import assert from 'assert';
 
-import { wordlists } from "../wordlists/wordlists.js";
+import { wordlists } from "../wordlists/wordlists";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import type { TestCaseWordlist } from "./types.js";
+import type { TestCaseWordlist } from "./types";
 
 
 

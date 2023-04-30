@@ -1,6 +1,6 @@
 import type {
     Provider, TransactionRequest, TransactionResponse
-} from "./provider.js";
+} from "./provider";
 
 // The object that will be used to run Contracts. The Signer and Provider
 // both adhere to this, but other types of objects may wish to as well.

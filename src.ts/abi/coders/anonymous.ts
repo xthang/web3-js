@@ -1,6 +1,6 @@
-import { Coder } from "./abstract-coder.js";
+import { Coder } from "./abstract-coder";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 /**
  *  Clones the functionality of an existing Coder, but without a localName

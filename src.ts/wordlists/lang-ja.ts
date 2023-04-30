@@ -1,9 +1,9 @@
-import { id } from "../hash/index.js";
+import { id } from "../hash/index";
 import {
     hexlify, assertArgument, toUtf8Bytes, toUtf8String
-} from "../utils/index.js";
+} from "../utils/index";
 
-import { Wordlist } from "./wordlist.js";
+import { Wordlist } from "./wordlist";
 
 
 const data = [

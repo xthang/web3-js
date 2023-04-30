@@ -3,7 +3,7 @@
  *
  *  @_section api/utils/events:Events  [about-events]
  */
-import { defineProperties } from "./properties.js";
+import { defineProperties } from "./properties";
 
 /**
  *  A callback function called when a an event is triggered.

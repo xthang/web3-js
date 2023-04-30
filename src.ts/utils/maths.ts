@@ -3,10 +3,9 @@
  *
  *  @_subsection: api/utils:Math Helpers  [about-maths]
  */
-import { hexlify, isBytesLike } from "./data.js";
-import { assert, assertArgument } from "./errors.js";
-
-import type { BytesLike } from "./data.js";
+import { hexlify, isBytesLike } from "./data";
+import type { BytesLike } from "./data";
+import { assert, assertArgument } from "./errors";
 
 /**
  *  Any type that can be used where a numeric value is needed.

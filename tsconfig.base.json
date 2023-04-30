@@ -1,27 +1,31 @@
 {
   "compilerOptions": {
-    "declaration": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
+    "moduleResolution": "node",
+    "module": "es2022",
+    "target": "es2022",
     "lib": [
       "es2020",
       "es5"
     ],
-    "moduleResolution": "node16",
+    "declaration": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
+    // "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
+    // "noUnusedLocals": true,
     "preserveSymlinks": true,
     "preserveWatchOutput": true,
     "pretty": false,
     "rootDir": "./src.ts",
-    "strict": true,
+    // "strict": true,
     "sourceMap": true,
-    "target": "es2022"
+    "paths": {
+      "tronweb": ["./node_modules/@types-x/tronweb/index.d.ts"]
+    }
   },
   "exclude": [ ],
   "include": [

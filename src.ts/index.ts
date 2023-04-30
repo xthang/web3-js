@@ -5,8 +5,6 @@
  *  @_section: api:Application Programming Interface  [about-api]
  *  @_navTitle: API
  */
-import * as ethers from "./ethers.js";
 
-export { ethers };
-
-export * from "./ethers.js";
+export * from "./ethers";
+export * as ethers from "./ethers";

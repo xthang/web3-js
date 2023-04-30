@@ -1,0 +1,39 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "lib": [
+            "ESNext" /* ESNext includes new Level-4 features that were
+               recently added to the ECMA-262 JS spec */
+        ],
+
+        "module": "ES2022" /* (1 of 2) TS v4.7 settings you need 
+                            to change */,
+
+        "moduleResolution": "node" /* This is the one that will 
+                                    specifically solve the error you're 
+                                    getting. Without the internal changes
+                                    made by this, your project will not
+                                    resolve modules correctly. */,
+
+        "esModuleInterop": true /* This is properly configured. FYI you cannot 
+                                change this, it must be set to true. */,
+
+        /* 
+      THE REST OF THE SETTINGS DO NOT AFFECT THE MODULE TYPE OR HOW TSC 
+      RESOLVES OTHER MODULES */
+
+        "target": "ES2021",
+        "allowJs": true,
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "paths": {
+            "tronweb": ["./node_modules/@types-x/tronweb/index.d.ts"]
+        }
+    },
+    "include": ["src.ts/**/*"],
+    "exclude": ["node_modules", "ignore"],
+    "ts-node": {
+        "esm": true,
+        "experimentalSpecifierResolution": "node"
+    }
+}

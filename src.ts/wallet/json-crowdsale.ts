@@ -4,12 +4,12 @@
 
 import { CBC, pkcs7Strip } from "aes-js";
 
-import { getAddress } from "../address/index.js";
-import { pbkdf2 } from "../crypto/index.js";
-import { id } from "../hash/index.js";
-import { getBytes, assertArgument } from "../utils/index.js";
-
-import { getPassword, looseArrayify, spelunk } from "./utils.js";
+import { convertToHexAddress } from "../address/index";
+import { pbkdf2 } from "../crypto/index";
+import { id } from "../hash/index";
+import { ChainNamespace } from "../providers/network";
+import { getBytes, assertArgument } from "../utils/index";
+import { getPassword, looseArrayify, spelunk } from "./utils";
 
 
 /**
@@ -28,7 +28,7 @@ export function isCrowdsaleJson(json: string): boolean {
     try {
         const data = JSON.parse(json);
         if (data.encseed) { return true; }
-    } catch (error) { }
+    } catch (error) { /* empty */ }
     return false;
 }
 
@@ -44,12 +44,12 @@ export function isCrowdsaleJson(json: string): boolean {
  *  all the primitives required are used through core portions of
  *  the library.
  */
-export function decryptCrowdsaleJson(json: string, _password: string | Uint8Array): CrowdsaleAccount {
+export function decryptCrowdsaleJson(json: string, _password: string | Uint8Array, chainNamespace: ChainNamespace): CrowdsaleAccount {
     const data = JSON.parse(json);
     const password = getPassword(_password);
 
     // Ethereum Address
-    const address = getAddress(spelunk(data, "ethaddr:string!"));
+    const address = convertToHexAddress(spelunk(data, "ethaddr:string!"), chainNamespace);
 
     // Encrypted Seed
     const encseed = looseArrayify(spelunk(data, "encseed:string!"));

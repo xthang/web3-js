@@ -1,9 +1,8 @@
 
 // utils/base64-browser
 
-import { getBytes } from "./data.js";
-
-import type { BytesLike } from "./data.js";
+import { getBytes } from "./data";
+import type { BytesLike } from "./data";
 
 
 export function decodeBase64(textData: string): Uint8Array {

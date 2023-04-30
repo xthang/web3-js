@@ -1,10 +1,10 @@
-import { FetchRequest } from "../../utils/index.js";
+import { FetchRequest } from "../../utils/index";
 
 const cache: Record<string, any> = { };
 
 export async function _getNpmPackage(name: string): Promise<any> {
     if (!cache[name]) {
-        const resp = await (new FetchRequest("https:/\/registry.npmjs.org/" + name)).send();
+        const resp = await (new FetchRequest("https://registry.npmjs.org/" + name)).send();
         resp.assertOk();
         cache[name] = resp.bodyJson;
     }
@@ -40,7 +40,7 @@ export async function getVersions(name: string): Promise<Array<Version>> {
 /*
 import semver from "semver";
 
-import { FetchRequest } from "../../utils/index.js";
+import { FetchRequest } from "../../utils/index";
 
 export type PackageInfo = {
     dependencies: { [ name: string ]: string };
@@ -76,7 +76,7 @@ const cache: Record<string, any> = { };
 
 async function getPackageInfo(name: string): Promise<any> {
     if (!cache[name]) {
-        const resp = await (new FetchRequest("https:/\/registry.npmjs.org/" + name)).send();
+        const resp = await (new FetchRequest("https://registry.npmjs.org/" + name)).send();
         resp.assertOk();
         cache[name] = resp.bodyJson();
     }

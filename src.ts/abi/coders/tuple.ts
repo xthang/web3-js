@@ -1,11 +1,11 @@
-import { defineProperties } from "../../utils/properties.js";
+import { defineProperties } from "../../utils/properties";
 
-import { Typed } from "../typed.js";
-import { Coder } from "./abstract-coder.js";
+import { Typed } from "../typed";
+import { Coder } from "./abstract-coder";
 
-import { pack, unpack } from "./array.js";
+import { pack, unpack } from "./array";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 /**
  *  @_ignore

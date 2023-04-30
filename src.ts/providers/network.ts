@@ -4,17 +4,24 @@
  *  @_subsection: api/providers:Networks  [networks]
  */
 
-import { accessListify } from "../transaction/index.js";
-import { getBigInt, assertArgument } from "../utils/index.js";
+import { accessListify } from "../transaction/index";
+import type { TransactionLike } from "../transaction/index";
+import { BigNumberish, assertArgument } from "../utils/index";
+import { EnsPlugin, GasCostPlugin } from "./plugins-network";
+//import { EtherscanPlugin } from "./provider-etherscan-base";
+// import type { BigNumberish } from "../utils/index";
+import type { NetworkPlugin } from "./plugins-network";
 
-import { EnsPlugin, GasCostPlugin } from "./plugins-network.js";
-//import { EtherscanPlugin } from "./provider-etherscan-base.js";
-
-import type { BigNumberish } from "../utils/index.js";
-import type { TransactionLike } from "../transaction/index.js";
-
-import type { NetworkPlugin } from "./plugins-network.js";
-
+export enum ChainNamespace {
+    eip155 = 'eip155',
+    solana = 'solana',
+    polkadot = 'polkadot',
+    cosmos = 'cosmos',
+    cardano = 'cardano',
+    elrond = 'elrond',
+    multiversx = 'multiversx',
+    tron = 'tron'
+}
 
 /**
  *  A Networkish can be used to allude to a Network, by specifing:
@@ -25,7 +32,7 @@ import type { NetworkPlugin } from "./plugins-network.js";
  */
 export type Networkish = Network | number | bigint | string | {
     name?: string,
-    chainId?: number,
+    chainId?: number | bigint | string,
     //layerOneConnection?: Provider,
     ensAddress?: string,
     ensNetwork?: number
@@ -93,13 +100,15 @@ const Networks: Map<string | bigint, () => Network> = new Map();
 
 export class Network {
     #name: string;
+    #chainNamespace: ChainNamespace;
     #chainId: bigint;
 
     #plugins: Map<string, NetworkPlugin>;
 
-    constructor(name: string, chainId: BigNumberish) {
+    constructor(name: string, chainNamespace: ChainNamespace, chainId: BigNumberish) {
         this.#name = name;
-        this.#chainId = getBigInt(chainId);
+        this.#chainNamespace = chainNamespace;
+        this.#chainId = BigInt(chainId)
         this.#plugins = new Map();
     }
 
@@ -108,10 +117,13 @@ export class Network {
     }
 
     get name(): string { return this.#name; }
-    set name(value: string) { this.#name =  value; }
+    set name(value: string) { this.#name = value; }
+
+    get chainNamespace(): ChainNamespace { return this.#chainNamespace; }
+    set chainNamespace(value: ChainNamespace) { this.#chainNamespace = value; }
 
     get chainId(): bigint { return this.#chainId; }
-    set chainId(value: BigNumberish) { this.#chainId = getBigInt(value, "chainId"); }
+    set chainId(value: bigint) { this.#chainId = value; }
 
     get plugins(): Array<NetworkPlugin> {
         return Array.from(this.#plugins.values());
@@ -119,7 +131,7 @@ export class Network {
 
     attachPlugin(plugin: NetworkPlugin): this {
         if (this.#plugins.get(plugin.name)) {
-            throw new Error(`cannot replace existing plugin: ${ plugin.name } `);
+            throw new Error(`cannot replace existing plugin: ${plugin.name} `);
         }
         this.#plugins.set(plugin.name, plugin.clone());
         return this;
@@ -135,7 +147,7 @@ export class Network {
     }
 
     clone(): Network {
-        const clone = new Network(this.name, this.chainId);
+        const clone = new Network(this.name, this.#chainNamespace, this.chainId);
         this.plugins.forEach((plugin) => {
             clone.attachPlugin(plugin.clone());
         });
@@ -170,26 +182,23 @@ export class Network {
     /**
      *  Returns a new Network for the %%network%% name or chainId.
      */
-    static from(network?: Networkish): Network {
+    static from(chainNamespace: ChainNamespace, network: Networkish): Network {
         injectCommonNetworks();
 
-        // Default network
-        if (network == null) { return Network.from("mainnet"); }
-
         // Canonical name or chain ID
-        if (typeof(network) === "number") { network = BigInt(network); }
-        if (typeof(network) === "string" || typeof(network) === "bigint") {
+        if (typeof (network) === "number") { network = BigInt(network); }
+        if (typeof (network) === "string" || typeof (network) === "bigint") {
             const networkFunc = Networks.get(network);
             if (networkFunc) { return networkFunc(); }
-            if (typeof(network) === "bigint") {
-                return new Network("unknown", network);
+            if (typeof (network) === "bigint") {
+                return new Network("unknown", chainNamespace, network);
             }
 
             assertArgument(false, "unknown network", "network", network);
         }
 
         // Clonable with network-like abilities
-        if (typeof((<Network>network).clone) === "function") {
+        if (typeof ((<Network>network).clone) === "function") {
             const clone = (<Network>network).clone();
             //if (typeof(network.name) !== "string" || typeof(network.chainId) !== "number") {
             //}
@@ -197,11 +206,11 @@ export class Network {
         }
 
         // Networkish
-        if (typeof(network) === "object") {
-            assertArgument(typeof(network.name) === "string" && typeof(network.chainId) === "number",
+        if (typeof (network) === "object") {
+            assertArgument(typeof (network.name) === "string" && (typeof (network.chainId) === "number" || typeof (network.chainId) === "bigint" || typeof (network.chainId) === "string"),
                 "invalid network object name or chainId", "network", network);
 
-            const custom = new Network(<string>(network.name), <number>(network.chainId));
+            const custom = new Network(<string>(network.name), chainNamespace, <number>(network.chainId));
 
             if ((<any>network).ensAddress || (<any>network).ensNetwork != null) {
                 custom.attachPlugin(new EnsPlugin((<any>network).ensAddress, (<any>network).ensNetwork));
@@ -222,10 +231,10 @@ export class Network {
      *  an instance of a Network representing that chain.
      */
     static register(nameOrChainId: string | number | bigint, networkFunc: () => Network): void {
-        if (typeof(nameOrChainId) === "number") { nameOrChainId = BigInt(nameOrChainId); }
+        if (typeof (nameOrChainId) === "number") { nameOrChainId = BigInt(nameOrChainId); }
         const existing = Networks.get(nameOrChainId);
         if (existing) {
-            assertArgument(false, `conflicting network for ${ JSON.stringify(existing.name) }`, "nameOrChainId", nameOrChainId);
+            assertArgument(false, `conflicting network for ${JSON.stringify(existing.name)}`, "nameOrChainId", nameOrChainId);
         }
         Networks.set(nameOrChainId, networkFunc);
     }
@@ -247,8 +256,8 @@ function injectCommonNetworks(): void {
 
     /// Register popular Ethereum networks
     function registerEth(name: string, chainId: number, options: Options): void {
-        const func = function() {
-            const network = new Network(name, chainId);
+        const func = function () {
+            const network = new Network(name, ChainNamespace.eip155, chainId);
 
             // We use 0 to disable ENS
             if (options.ensNetwork != null) {
@@ -256,14 +265,14 @@ function injectCommonNetworks(): void {
             }
 
             if (options.priorityFee) {
-//                network.attachPlugin(new MaxPriorityFeePlugin(options.priorityFee));
+                //                network.attachPlugin(new MaxPriorityFeePlugin(options.priorityFee));
             }
-/*
-            if (options.etherscan) {
-                const { url, apiKey } = options.etherscan;
-                network.attachPlugin(new EtherscanPlugin(url, apiKey));
-            }
-*/
+            /*
+                        if (options.etherscan) {
+                            const { url, apiKey } = options.etherscan;
+                            network.attachPlugin(new EtherscanPlugin(url, apiKey));
+                        }
+            */
             network.attachPlugin(new GasCostPlugin());
 
             return network;
@@ -280,63 +289,63 @@ function injectCommonNetworks(): void {
         }
     }
 
-    registerEth("mainnet", 1, { ensNetwork: 1, altNames: [ "homestead" ] });
+    registerEth("mainnet", 1, { ensNetwork: 1, altNames: ["homestead"] });
     registerEth("ropsten", 3, { ensNetwork: 3 });
     registerEth("rinkeby", 4, { ensNetwork: 4 });
     registerEth("goerli", 5, { ensNetwork: 5 });
     registerEth("kovan", 42, { ensNetwork: 42 });
-    registerEth("sepolia", 11155111, { });
+    registerEth("sepolia", 11155111, {});
 
-    registerEth("classic", 61, { });
-    registerEth("classicKotti", 6, { });
+    registerEth("classic", 61, {});
+    registerEth("classicKotti", 6, {});
 
     registerEth("xdai", 100, { ensNetwork: 1 });
 
     registerEth("optimism", 10, {
         ensNetwork: 1,
-        etherscan: { url: "https:/\/api-optimistic.etherscan.io/" }
+        etherscan: { url: "https://api-optimistic.etherscan.io/" }
     });
     registerEth("optimism-goerli", 420, {
-        etherscan: { url: "https:/\/api-goerli-optimistic.etherscan.io/" }
+        etherscan: { url: "https://api-goerli-optimistic.etherscan.io/" }
     });
 
     registerEth("arbitrum", 42161, {
         ensNetwork: 1,
-        etherscan: { url: "https:/\/api.arbiscan.io/" }
+        etherscan: { url: "https://api.arbiscan.io/" }
     });
     registerEth("arbitrum-goerli", 421613, {
-        etherscan: { url: "https:/\/api-goerli.arbiscan.io/" }
+        etherscan: { url: "https://api-goerli.arbiscan.io/" }
     });
 
     // Polygon has a 35 gwei maxPriorityFee requirement
     registerEth("matic", 137, {
         ensNetwork: 1,
-//        priorityFee: 35000000000,
+        //        priorityFee: 35000000000,
         etherscan: {
-//            apiKey: "W6T8DJW654GNTQ34EFEYYP3EZD9DD27CT7",
-            url: "https:/\/api.polygonscan.com/"
+            //            apiKey: "W6T8DJW654GNTQ34EFEYYP3EZD9DD27CT7",
+            url: "https://api.polygonscan.com/"
         }
     });
     registerEth("matic-mumbai", 80001, {
-        altNames: [ "maticMumbai", "maticmum" ],  // @TODO: Future remove these alts
-//        priorityFee: 35000000000,
+        altNames: ["maticMumbai", "maticmum"],  // @TODO: Future remove these alts
+        //        priorityFee: 35000000000,
         etherscan: {
-//            apiKey: "W6T8DJW654GNTQ34EFEYYP3EZD9DD27CT7",
-            url: "https:/\/api-testnet.polygonscan.com/"
+            //            apiKey: "W6T8DJW654GNTQ34EFEYYP3EZD9DD27CT7",
+            url: "https://api-testnet.polygonscan.com/"
         }
     });
 
     registerEth("bnb", 56, {
         ensNetwork: 1,
         etherscan: {
-//            apiKey: "EVTS3CU31AATZV72YQ55TPGXGMVIFUQ9M9",
-            url: "http:/\/api.bscscan.com"
+            //            apiKey: "EVTS3CU31AATZV72YQ55TPGXGMVIFUQ9M9",
+            url: "http://api.bscscan.com"
         }
     });
     registerEth("bnbt", 97, {
         etherscan: {
-//            apiKey: "EVTS3CU31AATZV72YQ55TPGXGMVIFUQ9M9",
-            url: "http:/\/api-testnet.bscscan.com"
+            //            apiKey: "EVTS3CU31AATZV72YQ55TPGXGMVIFUQ9M9",
+            url: "http://api-testnet.bscscan.com"
         }
     });
 }

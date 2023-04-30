@@ -3,14 +3,13 @@
  *
  *  @_section: api/utils/fixed-point-math:Fixed-Point Maths  [about-fixed-point-math]
  */
-import { getBytes } from "./data.js";
-import { assert, assertArgument, assertPrivate } from "./errors.js";
+import { getBytes } from "./data";
+import { assert, assertArgument, assertPrivate } from "./errors";
 import {
     getBigInt, fromTwos, mask, toBigInt
-} from "./maths.js";
-import { defineProperties } from "./properties.js";
-
-import type { BigNumberish, BytesLike } from "./index.js";
+} from "./maths";
+import { defineProperties } from "./properties";
+import type { BigNumberish, BytesLike } from "./index";
 
 const BN_N1 = BigInt(-1);
 const BN_0 = BigInt(0);

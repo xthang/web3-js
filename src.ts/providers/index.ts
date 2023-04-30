@@ -7,32 +7,36 @@
 
 
 export {
-    AbstractProvider, UnmanagedSubscriber
-} from "./abstract-provider.js";
+    AbstractProvider as AbstractProvider, UnmanagedSubscriber
+} from "./abstract-provider";
+
+export { AbstractSigner } from "./abstract-signer";
 
 export {
-    AbstractSigner,
+    AbstractEip155Signer,
     VoidSigner,
-} from "./abstract-signer.js";
+} from "./abstract-signer-eip155";
+
+export { AbstractTronSigner, } from "./abstract-signer-tron";
 
 export {
     showThrottleMessage
-} from "./community.js";
+} from "./community";
 
-export { getDefaultProvider } from "./default-provider.js";
+// export { getDefaultProvider } from "./default-provider";
 
-export { EnsResolver } from "./ens-resolver.js";
+export { EnsResolver } from "./ens-resolver";
 
-export { Network } from "./network.js";
+export { Network, ChainNamespace } from "./network";
 
-export { NonceManager } from "./signer-noncemanager.js";
+export { NonceManager } from "./signer-noncemanager";
 
 export {
     NetworkPlugin,
     GasCostPlugin,
     EnsPlugin,
     FeeDataNetworkPlugin,
-} from "./plugins-network.js";
+} from "./plugins-network";
 
 export {
     Block,
@@ -43,56 +47,56 @@ export {
 
     copyRequest,
     //resolveTransactionRequest,
-} from "./provider.js";
+} from "./provider";
 
-export { FallbackProvider } from "./provider-fallback.js";
-export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from "./provider-jsonrpc.js"
+// export { FallbackProvider } from "./provider-fallback";
+export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from "./provider-jsonrpc"
 
-export { BrowserProvider } from "./provider-browser.js";
+// export { BrowserProvider } from "./provider-browser";
 
-export { AlchemyProvider } from "./provider-alchemy.js";
-export { AnkrProvider } from "./provider-ankr.js";
-export { CloudflareProvider } from "./provider-cloudflare.js";
-export { EtherscanProvider, EtherscanPlugin } from "./provider-etherscan.js";
-export { InfuraProvider, InfuraWebSocketProvider } from "./provider-infura.js";
-export { PocketProvider } from "./provider-pocket.js";
-export { QuickNodeProvider } from "./provider-quicknode.js";
+// export { AlchemyProvider } from "./provider-alchemy";
+// export { AnkrProvider } from "./provider-ankr";
+// export { CloudflareProvider } from "./provider-cloudflare";
+// export { EtherscanProvider, EtherscanPlugin } from "./provider-etherscan";
+// export { InfuraProvider, InfuraWebSocketProvider } from "./provider-infura";
+// export { PocketProvider } from "./provider-pocket";
+// export { QuickNodeProvider } from "./provider-quicknode";
 
-import { IpcSocketProvider } from "./provider-ipcsocket.js"; /*-browser*/
-export { IpcSocketProvider };
-export { SocketProvider } from "./provider-socket.js";
-export { WebSocketProvider } from "./provider-websocket.js";
+// import { IpcSocketProvider } from "./provider-ipcsocket"; /*-browser*/
+// export { IpcSocketProvider };
+// export { SocketProvider } from "./provider-socket";
+// export { WebSocketProvider } from "./provider-websocket";
 
-export {
-    SocketSubscriber, SocketBlockSubscriber, SocketPendingSubscriber,
-    SocketEventSubscriber
-} from "./provider-socket.js";
+// export {
+//     SocketSubscriber, SocketBlockSubscriber, SocketPendingSubscriber,
+//     SocketEventSubscriber
+// } from "./provider-socket";
 
 export type {
     Subscription, Subscriber,
     AbstractProviderPlugin,
     PerformActionFilter, PerformActionTransaction, PerformActionRequest,
-} from "./abstract-provider.js"
+} from "./abstract-provider"
 
-export type { ContractRunner } from "./contracts.js";
+export type { ContractRunner } from "./contracts";
 
 export type {
     BlockParams, LogParams, TransactionReceiptParams,
     TransactionResponseParams,
-} from "./formatting.js";
+} from "./formatting";
 
 /*
 export type {
     CommunityResourcable
-} from "./community.js";
+} from "./community";
 
 export type {
     AvatarLinkageType, AvatarLinkage, AvatarResult
-} from "./ens-resolver.js";
+} from "./ens-resolver";
 */
-export type { Networkish } from "./network.js";
+export type { Networkish } from "./network";
 
-export type { GasCostParameters } from "./plugins-network.js";
+export type { GasCostParameters } from "./plugins-network";
 
 export type {
     BlockTag,
@@ -101,21 +105,23 @@ export type {
     TopicFilter,
     Provider,
     MinedBlock, MinedTransactionResponse
-} from "./provider.js";
+} from "./provider";
 
-export type {
-    DebugEventBrowserProvider, Eip1193Provider
-} from "./provider-browser.js";
+// export type {
+//     DebugEventBrowserProvider, Eip1193Provider
+// } from "./provider-browser";
 
 export type {
     JsonRpcPayload, JsonRpcResult, JsonRpcError,
     JsonRpcApiProviderOptions,
     JsonRpcTransactionRequest,
-} from "./provider-jsonrpc.js";
+} from "./provider-jsonrpc";
 
-export type {
-    WebSocketCreator, WebSocketLike
-} from "./provider-websocket.js";
+// export type {
+//     WebSocketCreator, WebSocketLike
+// } from "./provider-websocket";
 
-export type { Signer } from "./signer.js";
+export { TronProvider } from './provider-tron'
+
+export type { Signer } from "./signer";
 

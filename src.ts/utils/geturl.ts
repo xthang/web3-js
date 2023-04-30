@@ -2,10 +2,10 @@ import http from "http";
 import https from "https";
 import { gunzipSync } from "zlib";
 
-import { assert } from "./errors.js";
-import { getBytes } from "./data.js";
+import { getBytes } from "./data";
+import { assert } from "./errors";
 
-import type { FetchRequest, FetchCancelSignal, GetUrlResponse } from "./fetch.js";
+import type { FetchRequest, FetchCancelSignal, GetUrlResponse } from "./fetch";
 
 /**
  *  @_ignore:
@@ -14,7 +14,7 @@ export async function getUrl(req: FetchRequest, signal?: FetchCancelSignal): Pro
 
     const protocol = req.url.split(":")[0].toLowerCase();
 
-    assert(protocol === "http" || protocol === "https", `unsupported protocol ${ protocol }`, "UNSUPPORTED_OPERATION", {
+    assert(protocol === "http" || protocol === "https", `unsupported protocol ${protocol}`, "UNSUPPORTED_OPERATION", {
         info: { protocol },
         operation: "request"
     });
@@ -24,11 +24,11 @@ export async function getUrl(req: FetchRequest, signal?: FetchCancelSignal): Pro
     });
 
     const method = req.method;
-    const headers = Object.assign({ }, req.headers);
+    const headers = Object.assign({}, req.headers);
 
     const options: any = { method, headers };
 
-    const request = ((protocol === "http") ? http: https).request(req.url, options);
+    const request = ((protocol === "http") ? http : https).request(req.url, options);
 
     request.setTimeout(req.timeout);
 
@@ -51,7 +51,7 @@ export async function getUrl(req: FetchRequest, signal?: FetchCancelSignal): Pro
                 }
                 accum[name] = value;
                 return accum;
-            }, <{ [ name: string ]: string }>{ });
+            }, <{ [name: string]: string }>{});
 
             let body: null | Uint8Array = null;
             //resp.setEncoding("utf8");
@@ -84,7 +84,7 @@ export async function getUrl(req: FetchRequest, signal?: FetchCancelSignal): Pro
             });
 
             resp.on("error", (error) => {
-            //@TODO: Should this just return nornal response with a server error?
+                //@TODO: Should this just return nornal response with a server error?
                 (<any>error).response = { statusCode, statusMessage, headers, body };
                 reject(error);
             });

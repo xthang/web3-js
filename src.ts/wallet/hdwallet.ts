@@ -3,34 +3,32 @@
  *
  *  @_subsection: api/wallet:HD Wallets  [hd-wallets]
  */
-import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index.js";
-import { VoidSigner } from "../providers/index.js";
-import { computeAddress } from "../transaction/index.js";
+import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index";
+import type { ProgressCallback } from "../crypto/index";
+import { VoidSigner } from "../providers/index";
+import type { Provider } from "../providers/index";
+import { ChainNamespace } from "../providers/network";
+import { computeAddress } from "../transaction/index";
 import {
     concat, dataSlice, decodeBase58, defineProperties, encodeBase58,
     getBytes, hexlify, isBytesLike,
     getNumber, toBeArray, toBigInt, toBeHex,
     assertPrivate, assert, assertArgument
-} from "../utils/index.js";
-import { LangEn } from "../wordlists/lang-en.js";
-
-import { BaseWallet } from "./base-wallet.js";
-import { Mnemonic } from "./mnemonic.js";
+} from "../utils/index";
+import type { BytesLike, Numeric } from "../utils/index";
+import type { Wordlist } from "../wordlists/index";
+import { LangEn } from "../wordlists/lang-en";
+import { BaseEip155Wallet } from "./base-wallet-eip155";
 import {
     encryptKeystoreJson, encryptKeystoreJsonSync,
-} from "./json-keystore.js";
-
-import type { ProgressCallback } from "../crypto/index.js";
-import type { Provider } from "../providers/index.js";
-import type { BytesLike, Numeric } from "../utils/index.js";
-import type { Wordlist } from "../wordlists/index.js";
-
-import type { KeystoreAccount } from "./json-keystore.js";
+} from "./json-keystore";
+import type { KeystoreAccount } from "./json-keystore";
+import { Mnemonic } from "./mnemonic";
 
 /**
  *  The default derivation path for Ethereum HD Nodes. (i.e. ``"m/44'/60'/0'/0/0"``)
  */
-export const defaultPath: string = "m/44'/60'/0'/0/0";
+export const defaultPath = "m/44'/60'/0'/0/0";
 
 
 // "Bitcoin seed"
@@ -121,7 +119,7 @@ function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
  *  private key and the ability to derive child HD Nodes, defined by
  *  a path indicating the index of each child.
  */
-export class HDNodeWallet extends BaseWallet {
+export class HDNodeWallet extends BaseEip155Wallet {
     /**
      *  The compressed public key.
      */
@@ -328,7 +326,7 @@ export class HDNodeWallet extends BaseWallet {
      *  ``xpriv``, returning a neutered HD Node ([[HDNodeVoidWallet]])
      *  or full HD Node ([[HDNodeWallet) respectively.
      */
-    static fromExtendedKey(extendedKey: string): HDNodeWallet | HDNodeVoidWallet {
+    static fromExtendedKey(extendedKey: string, chainNamespace: ChainNamespace): HDNodeWallet | HDNodeVoidWallet {
         const bytes = toBeArray(decodeBase58(extendedKey)); // @TODO: redact
 
         assertArgument(bytes.length === 82 || encodeBase58Check(bytes.slice(0, 78)) === extendedKey,
@@ -344,7 +342,7 @@ export class HDNodeWallet extends BaseWallet {
             // Public Key
             case "0x0488b21e": case "0x043587cf": {
                 const publicKey = hexlify(key);
-                return new HDNodeVoidWallet(_guard, computeAddress(publicKey), publicKey,
+                return new HDNodeVoidWallet(_guard, computeAddress(publicKey, chainNamespace), publicKey,
                     parentFingerprint, chainCode, null, index, depth, null);
             }
 
@@ -520,7 +518,7 @@ export class HDNodeVoidWallet extends VoidSigner {
         const { IR, IL } = ser_I(index, this.chainCode, this.publicKey, null);
         const Ki = SigningKey.addPoints(IL, this.publicKey, true);
 
-        const address = computeAddress(Ki);
+        const address = computeAddress(Ki, this.provider!.chainNamespace);
 
         return new HDNodeVoidWallet(_guard, address, Ki, this.fingerprint, hexlify(IR),
             path, index, this.depth + 1, this.provider);

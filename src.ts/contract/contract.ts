@@ -1,26 +1,17 @@
-import { Interface, Typed } from "../abi/index.js";
-import { resolveAddress } from "../address/index.js";
+import { Interface, Typed } from "../abi/index";
+import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from "../abi/index";
+import { resolveAddress } from "../address/index";
 // import from provider.ts instead of index.ts to prevent circular dep
 // from EtherscanProvider
-import { copyRequest, Log, TransactionResponse } from "../providers/provider.js";
+import type { Addressable } from "../address/index";
+import { BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter, ChainNamespace } from "../providers/index";
+import { copyRequest, Log, TransactionResponse } from "../providers/provider";
 import {
     defineProperties, isCallException, isHexString, resolveProperties,
     makeError, assert, assertArgument
-} from "../utils/index.js";
-
-import {
-    ContractEventPayload, ContractUnknownEventPayload,
-    ContractTransactionResponse,
-    EventLog
-} from "./wrappers.js";
-
-import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from "../abi/index.js";
-import type { Addressable } from "../address/index.js";
-import type { EventEmitterable, Listener } from "../utils/index.js";
-import type {
-    BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter
-} from "../providers/index.js";
-
+} from "../utils/index";
+import type { EventEmitterable, Listener } from "../utils/index";
+import { TransactionType } from "../wallet";
 import type {
     BaseContractMethod,
     ContractEventName,
@@ -32,7 +23,12 @@ import type {
     ContractTransaction,
     DeferredTopicFilter,
     WrappedFallback
-} from "./types.js";
+} from "./types";
+import {
+    ContractEventPayload, ContractUnknownEventPayload,
+    ContractTransactionResponse,
+    EventLog
+} from "./wrappers";
 
 const BN_0 = BigInt(0);
 
@@ -53,19 +49,19 @@ interface ContractRunnerResolver extends ContractRunner {
 }
 
 function canCall(value: any): value is ContractRunnerCaller {
-    return (value && typeof(value.call) === "function");
+    return (value && typeof (value.call) === "function");
 }
 
 function canEstimate(value: any): value is ContractRunnerEstimater {
-    return (value && typeof(value.estimateGas) === "function");
+    return (value && typeof (value.estimateGas) === "function");
 }
 
 function canResolve(value: any): value is ContractRunnerResolver {
-    return (value && typeof(value.resolveName) === "function");
+    return (value && typeof (value.resolveName) === "function");
 }
 
 function canSend(value: any): value is ContractRunnerSender {
-    return (value && typeof(value.sendTransaction) === "function");
+    return (value && typeof (value.sendTransaction) === "function");
 }
 
 class PreparedTopicFilter implements DeferredTopicFilter {
@@ -80,15 +76,15 @@ class PreparedTopicFilter implements DeferredTopicFilter {
 
         // Recursively descend into args and resolve any addresses
         const runner = getRunner(contract.runner, "resolveName");
-        const resolver = canResolve(runner) ? runner: null;
-        this.#filter = (async function() {
+        const resolver = canResolve(runner) ? runner : null;
+        this.#filter = (async function () {
             const resolvedArgs = await Promise.all(fragment.inputs.map((param, index) => {
                 const arg = args[index];
                 if (arg == null) { return null; }
 
                 return param.walkAsync(args[index], (type, value) => {
                     if (type === "address") {
-                        return resolveAddress(value, resolver);
+                        return resolveAddress(value, ChainNamespace.eip155, resolver);
                     }
                     return value;
                 });
@@ -113,8 +109,8 @@ class PreparedTopicFilter implements DeferredTopicFilter {
 
 function getRunner<T extends ContractRunner>(value: any, feature: keyof ContractRunner): null | T {
     if (value == null) { return null; }
-    if (typeof(value[feature]) === "function") { return value; }
-    if (value.provider && typeof(value.provider[feature]) === "function") {
+    if (typeof (value[feature]) === "function") { return value; }
+    if (value.provider && typeof (value.provider[feature]) === "function") {
         return value.provider;
     }
     return null;
@@ -133,14 +129,14 @@ export async function copyOverrides<O extends string = "data" | "to">(arg: any, 
     // Create a shallow copy (we'll deep-ify anything needed during normalizing)
     const overrides = copyRequest(Typed.dereference(arg, "overrides"));
 
-    assertArgument(overrides.to == null || (allowed || [ ]).indexOf("to") >= 0,
-      "cannot override to", "overrides.to", overrides.to);
-    assertArgument(overrides.data == null || (allowed || [ ]).indexOf("data") >= 0,
-      "cannot override data", "overrides.data", overrides.data);
+    assertArgument(overrides.to == null || (allowed || []).indexOf("to") >= 0,
+        "cannot override to", "overrides.to", overrides.to);
+    assertArgument(overrides.data == null || (allowed || []).indexOf("data") >= 0,
+        "cannot override data", "overrides.data", overrides.data);
 
     // Resolve any from
     if (overrides.from) {
-        overrides.from = await resolveAddress(overrides.from);
+        overrides.from = await resolveAddress(overrides.from, ChainNamespace.eip155);
     }
 
     return <Omit<ContractTransaction, O>>overrides;
@@ -152,11 +148,11 @@ export async function copyOverrides<O extends string = "data" | "to">(arg: any, 
 export async function resolveArgs(_runner: null | ContractRunner, inputs: ReadonlyArray<ParamType>, args: Array<any>): Promise<Array<any>> {
     // Recursively descend into args and resolve any addresses
     const runner = getRunner(_runner, "resolveName");
-    const resolver = canResolve(runner) ? runner: null;
+    const resolver = canResolve(runner) ? runner : null;
     return await Promise.all(inputs.map((param, index) => {
         return param.walkAsync(args[index], (type, value) => {
             value = Typed.dereference(value, type);
-            if (type === "address") { return resolveAddress(value, resolver); }
+            if (type === "address") { return resolveAddress(value, runner.provider.chainNamespace, resolver); }
             return value;
         });
     }));
@@ -164,10 +160,10 @@ export async function resolveArgs(_runner: null | ContractRunner, inputs: Readon
 
 function buildWrappedFallback(contract: BaseContract): WrappedFallback {
 
-    const populateTransaction = async function(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransaction> {
+    const populateTransaction = async function (overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransaction> {
         // If an overrides was passed in, copy it and normalize the values
 
-        const tx: ContractTransaction = <any>(await copyOverrides<"data">(overrides, [ "data" ]));
+        const tx: ContractTransaction = <any>(await copyOverrides<"data">(overrides, ["data"]));
         tx.to = await contract.getAddress();
 
         const iface = contract.interface;
@@ -175,16 +171,16 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         // Only allow payable contracts to set non-zero value
         const payable = iface.receive || (iface.fallback && iface.fallback.payable);
         assertArgument(payable || (tx.value || BN_0) === BN_0,
-          "cannot send value to non-payable contract", "overrides.value", tx.value);
+            "cannot send value to non-payable contract", "overrides.value", tx.value);
 
         // Only allow fallback contracts to set non-empty data
         assertArgument(iface.fallback || (tx.data || "0x") === "0x",
-          "cannot send data to receive-only contract", "overrides.data", tx.data);
+            "cannot send data to receive-only contract", "overrides.data", tx.data);
 
         return tx;
     }
 
-    const staticCall = async function(overrides?: Omit<TransactionRequest, "to">): Promise<string> {
+    const staticCall = async function (overrides?: Omit<TransactionRequest, "to">): Promise<string> {
         const runner = getRunner(contract.runner, "call");
         assert(canCall(runner), "contract runner does not support calling",
             "UNSUPPORTED_OPERATION", { operation: "call" });
@@ -201,7 +197,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         }
     }
 
-    const send = async function(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse> {
+    const send = async function (overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse> {
         const runner = contract.runner;
         assert(canSend(runner), "contract runner does not support sending transactions",
             "UNSUPPORTED_OPERATION", { operation: "sendTransaction" });
@@ -213,7 +209,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return new ContractTransactionResponse(contract.interface, <Provider>provider, tx);
     }
 
-    const estimateGas = async function(overrides?: Omit<TransactionRequest, "to">): Promise<bigint> {
+    const estimateGas = async function (overrides?: Omit<TransactionRequest, "to">): Promise<bigint> {
         const runner = getRunner(contract.runner, "estimateGas");
         assert(canEstimate(runner), "contract runner does not support gas estimation",
             "UNSUPPORTED_OPERATION", { operation: "estimateGas" });
@@ -238,7 +234,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
 
 function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extends R | ContractTransactionResponse = ContractTransactionResponse>(contract: BaseContract, key: string): BaseContractMethod<A, R, D> {
 
-    const getFragment = function(...args: ContractMethodArgs<A>): FunctionFragment {
+    const getFragment = function (...args: ContractMethodArgs<A>): FunctionFragment {
         const fragment = contract.interface.getFunction(key, args);
         assert(fragment, "no matching fragment", "UNSUPPORTED_OPERATION", {
             operation: "fragment"
@@ -246,11 +242,11 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
         return fragment;
     }
 
-    const populateTransaction = async function(...args: ContractMethodArgs<A>): Promise<ContractTransaction> {
+    const populateTransaction = async function (...args: ContractMethodArgs<A>): Promise<ContractTransaction> {
         const fragment = getFragment(...args);
 
         // If an overrides was passed in, copy it and normalize the values
-        let overrides: Omit<ContractTransaction, "data" | "to"> = { };
+        let overrides: Omit<ContractTransaction, "data" | "to"> = {};
         if (fragment.inputs.length + 1 === args.length) {
             overrides = await copyOverrides(args.pop());
         }
@@ -261,19 +257,24 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
 
         const resolvedArgs = await resolveArgs(contract.runner, fragment.inputs, args);
 
-        return Object.assign({ }, overrides, await resolveProperties({
+        return Object.assign({}, overrides, await resolveProperties({
+            tronTransactionType: TransactionType.triggerSmartContract,
             to: contract.getAddress(),
-            data: contract.interface.encodeFunctionData(fragment, resolvedArgs)
+            data: contract.interface.encodeFunctionData(fragment, resolvedArgs),
+            customData: { // For TRON
+                function: key + '(' + fragment.inputs.map(it => it.type).join(',') + ')',
+                parameter: fragment.inputs.map((it, index) => ({ type: it.type, value: args[index] }))
+            }
         }));
     }
 
-    const staticCall = async function(...args: ContractMethodArgs<A>): Promise<R> {
+    const staticCall = async function (...args: ContractMethodArgs<A>): Promise<R> {
         const result = await staticCallResult(...args);
         if (result.length === 1) { return result[0]; }
         return <R><unknown>result;
     }
 
-    const send = async function(...args: ContractMethodArgs<A>): Promise<ContractTransactionResponse> {
+    const send = async function (...args: ContractMethodArgs<A>): Promise<ContractTransactionResponse> {
         const runner = contract.runner;
         assert(canSend(runner), "contract runner does not support sending transactions",
             "UNSUPPORTED_OPERATION", { operation: "sendTransaction" });
@@ -285,7 +286,7 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
         return new ContractTransactionResponse(contract.interface, <Provider>provider, tx);
     }
 
-    const estimateGas = async function(...args: ContractMethodArgs<A>): Promise<bigint> {
+    const estimateGas = async function (...args: ContractMethodArgs<A>): Promise<bigint> {
         const runner = getRunner(contract.runner, "estimateGas");
         assert(canEstimate(runner), "contract runner does not support gas estimation",
             "UNSUPPORTED_OPERATION", { operation: "estimateGas" });
@@ -293,7 +294,7 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
         return await runner.estimateGas(await populateTransaction(...args));
     }
 
-    const staticCallResult = async function(...args: ContractMethodArgs<A>): Promise<Result> {
+    const staticCallResult = async function (...args: ContractMethodArgs<A>): Promise<Result> {
         const runner = getRunner(contract.runner, "call");
         assert(canCall(runner), "contract runner does not support calling",
             "UNSUPPORTED_OPERATION", { operation: "call" });
@@ -349,7 +350,7 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
 
 function buildWrappedEvent<A extends Array<any> = Array<any>>(contract: BaseContract, key: string): ContractEvent<A> {
 
-    const getFragment = function(...args: ContractEventArgs<A>): EventFragment {
+    const getFragment = function (...args: ContractEventArgs<A>): EventFragment {
         const fragment = contract.interface.getEvent(key, args);
 
         assert(fragment, "no matching fragment", "UNSUPPORTED_OPERATION", {
@@ -359,7 +360,7 @@ function buildWrappedEvent<A extends Array<any> = Array<any>>(contract: BaseCont
         return fragment;
     }
 
-    const method = function(...args: ContractMethodArgs<A>): PreparedTopicFilter {
+    const method = function (...args: ContractMethodArgs<A>): PreparedTopicFilter {
         return new PreparedTopicFilter(contract, getFragment(...args), args);
     };
 
@@ -422,8 +423,8 @@ function getInternal(contract: BaseContract): Internal {
 }
 
 function isDeferred(value: any): value is DeferredTopicFilter {
-    return (value && typeof(value) === "object" && ("getTopicFilter" in value) &&
-      (typeof(value.getTopicFilter) === "function") && value.fragment);
+    return (value && typeof (value) === "object" && ("getTopicFilter" in value) &&
+        (typeof (value.getTopicFilter) === "function") && value.fragment);
 }
 
 async function getSubInfo(contract: BaseContract, event: ContractEventName): Promise<{ fragment: null | EventFragment, tag: string, topics: TopicFilter }> {
@@ -434,7 +435,7 @@ async function getSubInfo(contract: BaseContract, event: ContractEventName): Pro
     // events which need deconstructing.
 
     if (Array.isArray(event)) {
-        const topicHashify = function(name: string): string {
+        const topicHashify = function (name: string): string {
             if (isHexString(name, 32)) { return name; }
             const fragment = contract.interface.getEvent(name);
             assertArgument(fragment, "unknown fragment", "name", name);
@@ -449,17 +450,17 @@ async function getSubInfo(contract: BaseContract, event: ContractEventName): Pro
         });
 
     } else if (event === "*") {
-        topics = [ null ];
+        topics = [null];
 
-    } else if (typeof(event) === "string") {
+    } else if (typeof (event) === "string") {
         if (isHexString(event, 32)) {
             // Topic Hash
-            topics = [ event ];
+            topics = [event];
         } else {
-           // Name or Signature; e.g. `"Transfer", `"Transfer(address)"`
+            // Name or Signature; e.g. `"Transfer", `"Transfer(address)"`
             fragment = contract.interface.getEvent(event);
             assertArgument(fragment, "unknown fragment", "event", event);
-            topics = [ fragment.topicHash ];
+            topics = [fragment.topicHash];
         }
 
     } else if (isDeferred(event)) {
@@ -469,7 +470,7 @@ async function getSubInfo(contract: BaseContract, event: ContractEventName): Pro
     } else if ("fragment" in event) {
         // ContractEvent; e.g. `contract.filter.Transfer`
         fragment = event.fragment;
-        topics = [ fragment.topicHash ];
+        topics = [fragment.topicHash];
 
     } else {
         assertArgument(false, "unknown event name", "event", event);
@@ -513,32 +514,32 @@ async function getSub(contract: BaseContract, operation: string, event: Contract
 
     let sub = subs.get(tag);
     if (!sub) {
-        const address: string | Addressable = (addr ? addr: contract);
+        const address: string | Addressable = (addr ? addr : contract);
         const filter = { address, topics };
         const listener = (log: Log) => {
             let foundFragment = fragment;
             if (foundFragment == null) {
                 try {
                     foundFragment = contract.interface.getEvent(log.topics[0]);
-                } catch (error) { }
+                } catch (error) { /* empty */ }
             }
 
             // If fragment is null, we do not deconstruct the args to emit
 
             if (foundFragment) {
                 const _foundFragment = foundFragment;
-                const args = fragment ? contract.interface.decodeEventLog(fragment, log.data, log.topics): [ ];
+                const args: Result | any[] = fragment ? contract.interface.decodeEventLog(fragment, log.data, log.topics) : [];
                 emit(contract, event, args, (listener: null | Listener) => {
                     return new ContractEventPayload(contract, listener, event, _foundFragment, log);
                 });
             } else {
-                emit(contract, event, [ ], (listener: null | Listener) => {
+                emit(contract, event, [], (listener: null | Listener) => {
                     return new ContractUnknownEventPayload(contract, listener, event, log);
                 });
             }
         };
 
-        let starting: Array<Promise<any>> = [ ];
+        let starting: Array<Promise<any>> = [];
         const start = () => {
             if (starting.length) { return; }
             starting.push(provider.on(filter, listener));
@@ -547,13 +548,13 @@ async function getSub(contract: BaseContract, operation: string, event: Contract
         const stop = async () => {
             if (starting.length == 0) { return; }
 
-            let started = starting;
-            starting = [ ];
+            const started = starting;
+            starting = [];
             await Promise.all(started);
             provider.off(filter, listener);
         };
 
-        sub = { tag, listeners: [ ], start, stop };
+        sub = { tag, listeners: [], start, stop };
         subs.set(tag, sub);
     }
     return sub;
@@ -576,11 +577,11 @@ async function _emit(contract: BaseContract, event: ContractEventName, args: Arr
     sub.listeners = sub.listeners.filter(({ listener, once }) => {
         const passArgs = Array.from(args);
         if (payloadFunc) {
-            passArgs.push(payloadFunc(once ? null: listener));
+            passArgs.push(payloadFunc(once ? null : listener));
         }
         try {
             listener.call(contract, ...passArgs);
-        } catch (error) { }
+        } catch (error) { /* empty */ }
         return !once;
     });
     return (count > 0);
@@ -589,14 +590,15 @@ async function _emit(contract: BaseContract, event: ContractEventName, args: Arr
 async function emit(contract: BaseContract, event: ContractEventName, args: Array<any>, payloadFunc: null | PayloadFunc): Promise<boolean> {
     try {
         await lastEmit;
-    } catch (error) { }
+    } catch (error) { /* empty */ }
 
     const resultPromise = _emit(contract, event, args, payloadFunc);
     lastEmit = resultPromise;
     return await resultPromise;
 }
 
-const passProperties = [ "then" ];
+const passProperties = ["then"];
+
 export class BaseContract implements Addressable, EventEmitterable<ContractEventName> {
     readonly target!: string | Addressable;
     readonly interface!: Interface;
@@ -608,15 +610,15 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     readonly fallback!: null | WrappedFallback;
 
-    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | TransactionResponse) {
+    constructor(chainNamespace: ChainNamespace, target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | TransactionResponse) {
         if (runner == null) { runner = null; }
-        const iface = Interface.from(abi);
+        const iface = Interface.from(chainNamespace, abi);
         defineProperties<BaseContract>(this, { target, runner, interface: iface });
 
-        Object.defineProperty(this, internal, { value: { } });
+        Object.defineProperty(this, internal, { value: {} });
 
         let addrPromise;
-        let addr = null;
+        let addr: string | null = null;
 
         let deployTx: null | ContractTransactionResponse = null;
         if (_deployTx) {
@@ -626,14 +628,16 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
             deployTx = new ContractTransactionResponse(this.interface, <Provider>provider, _deployTx);
         }
 
-        let subs = new Map();
+        const subs = new Map();
 
         // Resolve the target as the address
-        if (typeof(target) === "string") {
+        if (typeof (target) === "string") {
             if (isHexString(target)) {
                 addr = target;
                 addrPromise = Promise.resolve(target);
-
+            } else if (chainNamespace === ChainNamespace.solana || chainNamespace === ChainNamespace.tron) {
+                addr = target
+                addrPromise = Promise.resolve(target);
             } else {
                 const resolver = getRunner(runner, "resolveName");
                 if (!canResolve(resolver)) {
@@ -660,7 +664,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
         setInternal(this, { addrPromise, addr, deployTx, subs });
 
         // Add the event filters
-        const filters = new Proxy({ }, {
+        const filters = new Proxy({}, {
             get: (target, _prop, receiver) => {
                 // Pass important checks (like `then` for Promise) through
                 if (passProperties.indexOf(<string>_prop) >= 0) {
@@ -672,7 +676,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
                 const result = this.getEvent(prop);
                 if (result) { return result; }
 
-                throw new Error(`unknown contract event: ${ prop }`);
+                throw new Error(`unknown contract event: ${prop}`);
             },
             has: (target, prop) => {
                 // Pass important checks (like `then` for Promise) through
@@ -686,7 +690,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
         defineProperties<BaseContract>(this, { filters });
 
         defineProperties<BaseContract>(this, {
-            fallback: ((iface.receive || iface.fallback) ? (buildWrappedFallback(this)): null)
+            fallback: ((iface.receive || iface.fallback) ? (buildWrappedFallback(this)) : null)
         });
 
         // Return a Proxy that will respond to functions
@@ -701,7 +705,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
                 const result = target.getFunction(prop);
                 if (result) { return result; }
 
-                throw new Error(`unknown contract method: ${ prop }`);
+                throw new Error(`unknown contract method: ${prop}`);
             },
             has: (target, prop) => {
                 if (prop in target || passProperties.indexOf(<string>prop) >= 0) {
@@ -715,7 +719,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     connect(runner: null | ContractRunner): BaseContract {
-        return new BaseContract(this.target, this.interface, runner);
+        return new BaseContract(this.interface.chainNamespace, this.target, this.interface, runner);
     }
 
     async getAddress(): Promise<string> { return await getInternal(this).addrPromise; }
@@ -766,13 +770,13 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T {
-        if (typeof(key) !== "string") { key = key.format(); }
+        if (typeof (key) !== "string") { key = key.format(); }
         const func = buildWrappedMethod(this, key);
         return <T>func;
     }
 
     getEvent(key: string | EventFragment): ContractEvent {
-        if (typeof(key) !== "string") { key = key.format(); }
+        if (typeof (key) !== "string") { key = key.format(); }
         return buildWrappedEvent(this, key);
     }
 
@@ -785,7 +789,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
         if (fromBlock == null) { fromBlock = 0; }
         if (toBlock == null) { toBlock = "latest"; }
         const { addr, addrPromise } = getInternal(this);
-        const address = (addr ? addr: (await addrPromise));
+        const address = (addr ? addr : (await addrPromise));
         const { fragment, topics } = await getSubInfo(this, event);
         const filter = { address, topics, fromBlock, toBlock };
 
@@ -798,7 +802,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
             if (foundFragment == null) {
                 try {
                     foundFragment = this.interface.getEvent(log.topics[0]);
-                } catch (error) { }
+                } catch (error) { /* empty */ }
             }
 
             if (foundFragment) {
@@ -846,13 +850,13 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     async listeners(event?: ContractEventName): Promise<Array<Listener>> {
         if (event) {
             const sub = await hasSub(this, event);
-            if (!sub) { return [ ]; }
+            if (!sub) { return []; }
             return sub.listeners.map(({ listener }) => listener);
         }
 
         const { subs } = getInternal(this);
 
-        let result: Array<Listener> = [ ];
+        let result: Array<Listener> = [];
         for (const { listeners } of subs.values()) {
             result = result.concat(listeners.map(({ listener }) => listener));
         }
@@ -905,21 +909,21 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     static buildClass<T = ContractInterface>(abi: InterfaceAbi): new (target: string, runner?: null | ContractRunner) => BaseContract & Omit<T, keyof BaseContract> {
         class CustomContract extends BaseContract {
-            constructor(address: string, runner: null | ContractRunner = null) {
-                super(address, abi, runner);
+            constructor(chainNamespace: ChainNamespace, address: string, runner: null | ContractRunner = null) {
+                super(chainNamespace, address, abi, runner);
             }
         }
         return CustomContract as any;
     };
 
-    static from<T = ContractInterface>(target: string, abi: InterfaceAbi, runner?: null | ContractRunner): BaseContract & Omit<T, keyof BaseContract> {
+    static from<T = ContractInterface>(chainNamespace: ChainNamespace, target: string, abi: InterfaceAbi, runner?: null | ContractRunner): BaseContract & Omit<T, keyof BaseContract> {
         if (runner == null) { runner = null; }
-        const contract = new this(target, abi, runner );
+        const contract = new this(chainNamespace, target, abi, runner);
         return contract as any;
     }
 }
 
-function _ContractBase(): new (target: string, abi: InterfaceAbi, runner?: null | ContractRunner) => BaseContract & Omit<ContractInterface, keyof BaseContract> {
+function _ContractBase(): new (chainNamespace: ChainNamespace, target: string, abi: InterfaceAbi, runner?: null | ContractRunner) => BaseContract & Omit<ContractInterface, keyof BaseContract> {
     return BaseContract as any;
 }
 

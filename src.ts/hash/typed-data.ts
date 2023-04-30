@@ -1,17 +1,15 @@
 //import { TypedDataDomain, TypedDataField } from "@ethersproject/providerabstract-signer";
-import { getAddress } from "../address/index.js";
-import { keccak256 } from "../crypto/index.js";
-import { recoverAddress } from "../transaction/index.js";
+import { formatHexAddress } from "../address/index";
+import { keccak256, keccak256_hex } from "../crypto/index";
+import type { SignatureLike } from "../crypto/index";
+import { ChainNamespace } from "../ethers";
+import { recoverAddress } from "../transaction/index";
 import {
     concat, defineProperties, getBigInt, getBytes, hexlify, isHexString, mask, toBeHex, toQuantity, toTwos, zeroPadValue,
     assertArgument
-} from "../utils/index.js";
-
-import { id } from "./id.js";
-
-import type { SignatureLike } from "../crypto/index.js";
-import type { BigNumberish, BytesLike } from "../utils/index.js";
-
+} from "../utils/index";
+import type { BigNumberish, BytesLike } from "../utils/index";
+import { id } from "./id";
 
 const padding = new Uint8Array(32);
 padding.fill(0);
@@ -68,19 +66,19 @@ function checkString(key: string): (value: any) => string {
 const domainChecks: Record<string, (value: any) => any> = {
     name: checkString("name"),
     version: checkString("version"),
-    chainId: function(_value: any) {
+    chainId(_value: any) {
         const value = getBigInt(_value, "domain.chainId");
         assertArgument(value >= 0, "invalid chain ID", "domain.chainId", _value);
         if (Number.isSafeInteger(value)) { return Number(value); }
         return toQuantity(value);
     },
-    verifyingContract: function(value: any) {
+    verifyingContract(value: any) {
         try {
-            return getAddress(value).toLowerCase();
+            return formatHexAddress(value).toLowerCase();
         } catch (error) { }
         assertArgument(false, `invalid domain value "verifyingContract"`, "domain.verifyingContract", value);
     },
-    salt: function(value: any) {
+    salt(value: any) {
         const bytes = getBytes(value, "domain.salt");
         assertArgument(bytes.length === 32, `invalid domain value "salt"`, "domain.salt", value);
         return hexlify(bytes);
@@ -127,13 +125,13 @@ function getBaseEncoder(type: string): null | ((value: any) => string) {
 
     switch (type) {
         case "address": return function(value: string) {
-            return zeroPadValue(getAddress(value), 32);
+            return zeroPadValue(formatHexAddress(value), 32);
         };
         case "bool": return function(value: boolean) {
             return ((!value) ? hexFalse: hexTrue);
         };
         case "bytes": return function(value: BytesLike) {
-            return keccak256(value);
+            return keccak256_hex(value);
         };
         case "string": return function(value: string) {
             return id(value);
@@ -268,10 +266,10 @@ export class TypedDataEncoder {
 
                 let result = value.map(subEncoder);
                 if (this.#fullTypes.has(subtype)) {
-                    result = result.map(keccak256);
+                    result = result.map(keccak256_hex);
                 }
 
-                return keccak256(concat(result));
+                return keccak256_hex(concat(result));
             };
         }
 
@@ -304,7 +302,7 @@ export class TypedDataEncoder {
     }
 
     hashStruct(name: string, value: Record<string, any>): string {
-        return keccak256(this.encodeData(name, value));
+        return keccak256_hex(this.encodeData(name, value));
     }
 
     encode(value: Record<string, any>): string {
@@ -382,7 +380,7 @@ export class TypedDataEncoder {
     }
 
     static hash(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): string {
-        return keccak256(TypedDataEncoder.encode(domain, types, value));
+        return keccak256_hex(TypedDataEncoder.encode(domain, types, value));
     }
 
     // Replaces all address types with ENS names with their looked up address
@@ -495,6 +493,6 @@ export class TypedDataEncoder {
 /**
  *  Compute the address used to sign the typed data for the %%signature%%.
  */
-export function verifyTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>, signature: SignatureLike): string {
-    return recoverAddress(TypedDataEncoder.hash(domain, types, value), signature);
+export function verifyTypedData(chainNamespace: ChainNamespace, domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>, signature: SignatureLike): string {
+    return recoverAddress(TypedDataEncoder.hash(domain, types, value), signature, chainNamespace);
 }

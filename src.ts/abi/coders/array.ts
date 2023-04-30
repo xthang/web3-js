@@ -1,13 +1,13 @@
 import {
     defineProperties, isError, assert, assertArgument, assertArgumentCount
-} from "../../utils/index.js";
+} from "../../utils/index";
 
-import { Typed } from "../typed.js";
+import { Typed } from "../typed";
 
-import { Coder, Result, WordSize, Writer } from "./abstract-coder.js";
-import { AnonymousCoder } from "./anonymous.js";
+import { Coder, Result, WordSize, Writer } from "./abstract-coder";
+import { AnonymousCoder } from "./anonymous";
 
-import type { Reader } from "./abstract-coder.js";
+import type { Reader } from "./abstract-coder";
 
 /**
  *  @_ignore

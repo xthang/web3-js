@@ -1,7 +1,7 @@
-import { assert, isHexString } from "../utils/index.js";
+import { assert, isHexString } from "../utils/index";
 
-import type { AbstractProvider, Subscriber } from "./abstract-provider.js";
-import type { EventFilter, OrphanFilter, ProviderEvent } from "./provider.js";
+import type { AbstractProvider, Subscriber } from "./abstract-provider";
+import type { EventFilter, OrphanFilter, ProviderEvent } from "./provider";
 
 function copy(obj: any): any {
     return JSON.parse(JSON.stringify(obj));

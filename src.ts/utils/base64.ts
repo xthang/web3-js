@@ -6,9 +6,9 @@
  *
  *  @_subsection: api/utils:Base64 Encoding  [about-base64]
  */
-import { getBytes, getBytesCopy } from "./data.js";
+import { getBytes, getBytesCopy } from "./data";
 
-import type { BytesLike } from "./data.js";
+import type { BytesLike } from "./data";
 
 
 /**

@@ -4,7 +4,7 @@ import {
     decodeBase64, encodeBase64,
     defineProperties, isError,
     toUtf8Bytes
-} from "../index.js";
+} from "../index";
 
 
 describe("Base64 Coding", function() {

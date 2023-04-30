@@ -1,10 +1,10 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import { formatEther, formatUnits, parseEther, parseUnits } from "../index.js";
+import { formatEther, formatUnits, parseEther, parseUnits } from "../index";
 
-import type { TestCaseUnit } from "./types.js";
+import type { TestCaseUnit } from "./types";
 
 
 describe("Tests unit conversion", function() {

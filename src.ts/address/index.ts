@@ -49,9 +49,8 @@ export interface NameResolver {
     resolveName(name: string): Promise<null | string>;
 }
 
-export { getAddress, getIcapAddress } from "./address.js";
+export * from "./address";
 
-export { getCreateAddress, getCreate2Address } from "./contract-address.js";
+export * from "./contract-address";
 
-
-export { isAddressable, isAddress, resolveAddress } from "./checks.js";
+export * from "./checks";

@@ -1,19 +1,21 @@
-import { getAddress } from "../../address/index.js";
-import { toBeHex } from "../../utils/maths.js";
-
-import { Typed } from "../typed.js";
-import { Coder } from "./abstract-coder.js";
-
-import type { Reader, Writer } from "./abstract-coder.js";
+import { convertToHexAddress, formatHexAddress } from "../../address/index";
+import { ChainNamespace } from "../../providers";
+import { toBeHex } from "../../utils/maths";
+import { Typed } from "../typed";
+import { Coder } from "./abstract-coder";
+import type { Reader, Writer } from "./abstract-coder";
 
 
 /**
  *  @_ignore
  */
 export class AddressCoder extends Coder {
+    readonly #chainNamespace: ChainNamespace
 
-    constructor(localName: string) {
+    constructor(chainNamespace: ChainNamespace, localName: string) {
         super("address", "address", localName, false);
+
+        this.#chainNamespace = chainNamespace
     }
 
     defaultValue(): string {
@@ -23,7 +25,7 @@ export class AddressCoder extends Coder {
     encode(writer: Writer, _value: string | Typed): number {
         let value = Typed.dereference(_value, "string");
         try {
-            value = getAddress(value);
+            value = convertToHexAddress(value, this.#chainNamespace);
         } catch (error: any) {
             return this._throwError(error.message, _value);
         }
@@ -31,6 +33,6 @@ export class AddressCoder extends Coder {
     }
 
     decode(reader: Reader): any {
-        return getAddress(toBeHex(reader.readValue(), 20));
+        return formatHexAddress(toBeHex(reader.readValue(), 20));
     }
 }

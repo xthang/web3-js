@@ -1,10 +1,10 @@
 //See: https://github.com/ethereum/wiki/wiki/RLP
 
-import { hexlify } from "./data.js";
-import { assert, assertArgument } from "./errors.js";
-import { getBytes } from "./data.js";
+import { hexlify } from "./data";
+import { assert, assertArgument } from "./errors";
+import { getBytes } from "./data";
 
-import type { BytesLike, RlpStructuredData } from "./index.js";
+import type { BytesLike, RlpStructuredData } from "./index";
 
 
 function hexlifyByte(value: number): string {

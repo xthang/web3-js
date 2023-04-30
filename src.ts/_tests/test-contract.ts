@@ -1,12 +1,13 @@
 
 import assert from "assert";
 
-import { getProvider, setupProviders } from "./create-provider.js";
+import { getProvider, setupProviders } from "./create-provider";
 
 import {
+    ChainNamespace,
     Contract, EventLog, isError, Typed, Wallet
-} from "../index.js";
-import type { ContractEventPayload, ContractEventName, Log } from "../index.js";
+} from "../index";
+import type { ContractEventPayload, ContractEventName, Log } from "../index";
 
 setupProviders();
 
@@ -31,7 +32,7 @@ describe("Test Contract", function() {
         this.timeout(10000);
 
         const provider = getProvider("InfuraProvider", "goerli");
-        const contract = new Contract(addr, abi, provider);
+        const contract = new Contract(ChainNamespace.eip155, addr, abi, provider);
 
         assert.equal(await contract.testCallAdd(4, 5), BigInt(9), "testCallAdd(4, 5)");
         assert.equal(await contract.testCallAdd(6, 0), BigInt(6), "testCallAdd(6, 0)");
@@ -43,7 +44,7 @@ describe("Test Contract", function() {
         const provider = getProvider("InfuraProvider", "goerli");
         assert.ok(provider);
 
-        const contract = new Contract(addr, abi, provider);
+        const contract = new Contract(ChainNamespace.eip155, addr, abi, provider);
 
         const signer = new Wallet(<string>(process.env.FAUCET_PRIVATEKEY), provider);
         const contractSigner = <any>contract.connect(signer);
@@ -179,7 +180,7 @@ describe("Test Contract", function() {
     });
 
     it("tests the _in_ operator for functions", function() {
-        const contract = new Contract(addr, abi);
+        const contract = new Contract(ChainNamespace.eip155, addr, abi);
 
         assert.equal("testCallAdd" in contract, true, "has(testCallAdd)");
         assert.equal("nonExist" in contract, false, "has(nonExist)");
@@ -195,7 +196,7 @@ describe("Test Contract", function() {
     });
 
     it("tests the _in_ operator for events", function() {
-        const contract = new Contract(addr, abi);
+        const contract = new Contract(ChainNamespace.eip155, addr, abi);
 
         assert.equal("EventUint256" in contract.filters, true, "has(EventUint256)");
         assert.equal("NonExist" in contract.filters, false, "has(NonExist)");
@@ -262,7 +263,7 @@ describe("Test Typed Contract Interaction", function() {
 
     const addr = "0x838f41545DA5e18AA0e1ab391085d22E172B7B02";
     const provider = getProvider("InfuraProvider", "goerli");
-    const contract = new Contract(addr, abi, provider);
+    const contract = new Contract(ChainNamespace.eip155, addr, abi, provider);
 
     for (const { types, valueFunc } of tests) {
         for (const type of types) {
@@ -472,7 +473,7 @@ describe("Test Contract Fallback", function() {
             const { name, address, abi } = test;
             const send = test[group];
 
-            const contract = new Contract(address, abi, provider);
+            const contract = new Contract(ChainNamespace.eip155, address, abi, provider);
             it(`test contract fallback checks: ${ group } - ${ name }`, async function() {
                 const func = async function() {
                     if (abi.length === 0) {

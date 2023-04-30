@@ -1,13 +1,13 @@
 import {
     defineProperties, fromTwos, getBigInt, mask, toTwos
-} from "../../utils/index.js";
+} from "../../utils/index";
 
-import { Typed } from "../typed.js";
-import { Coder, WordSize } from "./abstract-coder.js";
+import { Typed } from "../typed";
+import { Coder, WordSize } from "./abstract-coder";
 
-import type { BigNumberish } from "../../utils/index.js";
+import type { BigNumberish } from "../../utils/index";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 
 const BN_0 = BigInt(0);

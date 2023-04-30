@@ -4,7 +4,7 @@ import {
     isError,
     fromTwos, toTwos,
     getBigInt, getNumber, toBeArray, toBeHex, toQuantity,
-} from "../index.js";
+} from "../index";
 
 describe("Tests Quantity Functions", function() {
     const quantities: Array<{ name: string, value: any, expected: string }> = [

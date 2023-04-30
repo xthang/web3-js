@@ -1,15 +1,13 @@
-import { defineProperties } from "../utils/index.js";
-import { AbstractSigner } from "./abstract-signer.js";
-
-import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
-
+import type { TypedDataDomain, TypedDataField } from "../hash/index";
+import { defineProperties } from "../utils/index";
+import { AbstractEip155Signer } from "./abstract-signer-eip155";
 import type {
     BlockTag, Provider, TransactionRequest, TransactionResponse
-} from "./provider.js";
-import type { Signer } from "./signer.js";
+} from "./provider";
+import type { Signer } from "./signer";
 
 
-export class NonceManager extends AbstractSigner {
+export class NonceManager extends AbstractEip155Signer {
     signer!: Signer;
 
     #noncePromise: null | Promise<number>;

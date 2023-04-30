@@ -1,12 +1,8 @@
 import assert from "assert";
-import { loadTests } from "./utils.js";
-
-import { TestCaseAbi, TestCaseAbiVerbose } from "./types.js";
-
-import {
-    AbiCoder, Interface,
-    decodeBytes32String, encodeBytes32String
-} from "../index.js";
+import { loadTests } from "./utils";
+import { TestCaseAbi, TestCaseAbiVerbose } from "./types";
+import { AbiCoder, Interface, decodeBytes32String, encodeBytes32String } from "../index";
+import { ChainNamespace } from "../providers/network";
 
 function equal(actual: any, expected: TestCaseAbiVerbose): void {
     switch (expected.type) {
@@ -24,28 +20,28 @@ function equal(actual: any, expected: TestCaseAbiVerbose): void {
             }
             return;
     }
-    throw new Error(`unsupported: ${ expected }`);
+    throw new Error(`unsupported: ${expected}`);
 }
 
-describe("Tests ABI Coder", function() {
+describe("Tests ABI Coder", function () {
     const tests = loadTests<TestCaseAbi>("abi");
 
     for (const test of tests) {
-        it(`tests ABI encoding: (${ test.name })`, function() {
-            const encoded = AbiCoder.defaultAbiCoder().encode([ test.type ], [ test.value ]);
+        it(`tests ABI encoding: (${test.name})`, function () {
+            const encoded = AbiCoder.defaultAbiCoder(ChainNamespace.eip155).encode([test.type], [test.value]);
             assert.equal(encoded, test.encoded, "encoded");
         });
     }
 
     for (const test of tests) {
-        it(`tests ABI decoding: (${ test.name })`, function() {
-            const decoded = AbiCoder.defaultAbiCoder().decode([ test.type ], test.encoded)[0];
+        it(`tests ABI decoding: (${test.name})`, function () {
+            const decoded = AbiCoder.defaultAbiCoder(ChainNamespace.eip155).decode([test.type], test.encoded)[0];
             equal(decoded, test.verbose);
         });
     }
 });
 
-describe("Test Bytes32 strings", function() {
+describe("Test Bytes32 strings", function () {
     const tests: Array<{ name: string, str: string, expected: string }> = [
         {
             name: "ricmoo.firefly.eth",
@@ -60,7 +56,7 @@ describe("Test Bytes32 strings", function() {
     ];
 
     for (const { name, str, expected } of tests) {
-        it(`encodes and decodes Bytes32 strings: ${ name }`, function() {
+        it(`encodes and decodes Bytes32 strings: ${name}`, function () {
             const bytes32 = encodeBytes32String(str);
             const decoded = decodeBytes32String(bytes32);
             assert.equal(bytes32, expected, 'formatted correctly');
@@ -70,17 +66,17 @@ describe("Test Bytes32 strings", function() {
 
 });
 
-describe("Test Interface", function() {
-    const iface = new Interface([
+describe("Test Interface", function () {
+    const iface = new Interface(ChainNamespace.eip155, [
         "function balanceOf(address owner) returns (uint)",
         "event Transfer(address indexed from, address indexed to, uint amount)"
     ]);
 
-    it("does interface stuff; @TODO expand this", function() {
+    it("does interface stuff; @TODO expand this", function () {
         const addr = "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
         const addr2 = "0xAC1639CF97a3A46D431e6d1216f576622894cBB5";
 
-        const data = iface.encodeFunctionData("balanceOf", [ addr ]);
+        const data = iface.encodeFunctionData("balanceOf", [addr]);
         assert.equal(data, "0x70a082310000000000000000000000008ba1f109551bd432803012645ac136ddd64dba72", "encoded");
 
         const decoded = iface.decodeFunctionData("balanceOf", data);
@@ -96,7 +92,7 @@ describe("Test Interface", function() {
         assert.equal(tx.selector, "0x70a08231", "tx.selector");
         assert.equal(tx.value, BigInt(10), "tx.value");
 
-        const result = iface.encodeFunctionResult("balanceOf", [ 123 ]);
+        const result = iface.encodeFunctionResult("balanceOf", [123]);
         assert.equal(result, "0x000000000000000000000000000000000000000000000000000000000000007b", "result");
 
         const value = iface.decodeFunctionResult("balanceOf", result);
@@ -105,13 +101,13 @@ describe("Test Interface", function() {
 
         // @TODO: parseResult
 
-        const filter = iface.encodeFilterTopics("Transfer", [ addr, addr2 ]);
+        const filter = iface.encodeFilterTopics("Transfer", [addr, addr2]);
         assert.equal(filter.length, 3);
         assert.equal(filter[0], "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef");
         assert.equal(filter[1], "0x0000000000000000000000008ba1f109551bd432803012645ac136ddd64dba72");
         assert.equal(filter[2], "0x000000000000000000000000ac1639cf97a3a46d431e6d1216f576622894cbb5");
 
-        const eventLog = iface.encodeEventLog("Transfer", [ addr, addr2, 234 ]);
+        const eventLog = iface.encodeEventLog("Transfer", [addr, addr2, 234]);
         assert.equal(eventLog.data, "0x00000000000000000000000000000000000000000000000000000000000000ea");
         assert.deepEqual(eventLog.topics, [
             "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
@@ -137,13 +133,13 @@ describe("Test Interface", function() {
     });
 });
 
-describe("Tests Legacy ABI formats", function() {
+describe("Tests Legacy ABI formats", function () {
 
     // See: #3932
-    const iface = new Interface([
+    const iface = new Interface(ChainNamespace.eip155, [
         {
             name: "implicitView",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -153,7 +149,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitSendNonpay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -163,7 +159,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitSendPay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -173,7 +169,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitSendImplicitPay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -182,7 +178,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitSendExplicitPay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -191,7 +187,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitSendExplicitNonpay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -200,7 +196,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "implicitAll",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -208,7 +204,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "explicitView",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -219,7 +215,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "explicitPure",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -230,7 +226,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "explicitPay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -241,7 +237,7 @@ describe("Tests Legacy ABI formats", function() {
         },
         {
             name: "explicitNonpay",
-            outputs: [ ],
+            outputs: [],
             inputs: [
                 { type: "int128", name: "arg0" }
             ],
@@ -253,12 +249,12 @@ describe("Tests Legacy ABI formats", function() {
     ]);
 
     function test(name: string, isConst: boolean, payable: boolean, stateMutability: string): void {
-        it(`tests ABI configuration: ${ name }`, function() {
+        it(`tests ABI configuration: ${name}`, function () {
             const f = iface.getFunction(name);
-            assert.ok(!!f, `missing ${ name }`);
-            assert.equal(f.constant, isConst, `${ name }.constant`);
-            assert.equal(f.stateMutability, stateMutability, `${ name }.stateMutability`);
-            assert.equal(f.payable, payable, `${ name }.payable`);
+            assert.ok(!!f, `missing ${name}`);
+            assert.equal(f.constant, isConst, `${name}.constant`);
+            assert.equal(f.stateMutability, stateMutability, `${name}.stateMutability`);
+            assert.equal(f.payable, payable, `${name}.payable`);
         });
     }
 

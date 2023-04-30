@@ -2,18 +2,18 @@ import assert from "assert";
 
 import {
     checkProvider, getProvider, setupProviders, providerNames
-} from "./create-provider.js";
-import { retryIt } from "./utils.js";
+} from "./create-provider";
+import { retryIt } from "./utils";
 
-import type { Provider } from "../index.js";
+import type { Provider } from "../index";
 
 
 import {
     networkFeatureAtBlock, networkNames,
     testAddress, testBlock, testReceipt, testTransaction
-} from "./blockchain-data.js";
+} from "./blockchain-data";
 
-import type { TestBlockchainNetwork } from "./blockchain-data.js";
+import type { TestBlockchainNetwork } from "./blockchain-data";
 
 
 setupProviders();

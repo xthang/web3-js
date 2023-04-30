@@ -4,11 +4,11 @@
  *  @_subsection api/abi/abi-coder:Fragments  [about-fragments]
  */
 
+import { id } from "../hash/index";
 import {
     defineProperties, getBigInt, getNumber,
     assert, assertPrivate, assertArgument
-} from "../utils/index.js";
-import { id } from "../hash/index.js";
+} from "../utils/index";
 
 /**
  *  A type description in a JSON API.
@@ -126,14 +126,14 @@ const KwModifiers = setify(_kwModifiers.split(" "));
 const _kwOther = "tuple returns";
 
 // All Keywords
-const _keywords = [ _kwTypes, _kwModifiers, _kwOther, _kwVisib ].join(" ");
+const _keywords = [_kwTypes, _kwModifiers, _kwOther, _kwVisib].join(" ");
 const Keywords = setify(_keywords.split(" "));
 
 // Single character tokens
 const SimpleTokens: Record<string, string> = {
-  "(": "OPEN_PAREN", ")": "CLOSE_PAREN",
-  "[": "OPEN_BRACKET", "]": "CLOSE_BRACKET",
-  ",": "COMMA", "@": "AT"
+    "(": "OPEN_PAREN", ")": "CLOSE_PAREN",
+    "[": "OPEN_BRACKET", "]": "CLOSE_BRACKET",
+    ",": "COMMA", "@": "AT"
 };
 
 // Parser regexes to consume the next token
@@ -188,9 +188,9 @@ class TokenString {
     clone(): TokenString { return new TokenString(this.#tokens); }
     reset(): void { this.#offset = 0; }
 
-    #subTokenString(from: number = 0, to: number = 0): TokenString {
+    #subTokenString(from = 0, to = 0): TokenString {
         return new TokenString(this.#tokens.slice(from, to).map((t) => {
-            return Object.freeze(Object.assign({ }, t, {
+            return Object.freeze(Object.assign({}, t, {
                 match: (t.match - from),
                 linkBack: (t.linkBack - from),
                 linkNext: (t.linkNext - from),
@@ -201,13 +201,13 @@ class TokenString {
     // Pops and returns the value of the next token, if it is a keyword in allowed; throws if out of tokens
     popKeyword(allowed: ReadonlySet<string>): string {
         const top = this.peek();
-        if (top.type !== "KEYWORD" || !allowed.has(top.text)) { throw new Error(`expected keyword ${ top.text }`); }
+        if (top.type !== "KEYWORD" || !allowed.has(top.text)) { throw new Error(`expected keyword ${top.text}`); }
         return this.pop().text;
     }
 
     // Pops and returns the value of the next token if it is `type`; throws if out of tokens
     popType(type: string): string {
-        if (this.peek().type !== type) { throw new Error(`expected ${ type }; got ${ JSON.stringify(this.peek()) }`); }
+        if (this.peek().type !== type) { throw new Error(`expected ${type}; got ${JSON.stringify(this.peek())}`); }
         return this.pop().text;
     }
 
@@ -226,9 +226,9 @@ class TokenString {
 
         if (top.type !== "OPEN_PAREN") { throw new Error("bad start"); }
 
-        const result: Array<TokenString> = [ ];
+        const result: Array<TokenString> = [];
 
-        while(this.#offset < top.match - 1) {
+        while (this.#offset < top.match - 1) {
             const link = this.peek().linkNext;
             result.push(this.#subTokenString(this.#offset + 1, link));
             this.#offset = link;
@@ -250,14 +250,14 @@ class TokenString {
     // Returns the next value, if it is a keyword in `allowed`
     peekKeyword(allowed: ReadonlySet<string>): null | string {
         const top = this.peekType("KEYWORD");
-        return (top != null && allowed.has(top)) ? top: null;
+        return (top != null && allowed.has(top)) ? top : null;
     }
 
     // Returns the value of the next token if it is `type`
     peekType(type: string): null | string {
         if (this.length === 0) { return null; }
         const top = this.peek();
-        return (top.type === type) ? top.text: null;
+        return (top.type === type) ? top.text : null;
     }
 
     // Returns the next token; throws if out of tokens
@@ -268,27 +268,27 @@ class TokenString {
     }
 
     toString(): string {
-        const tokens: Array<string> = [ ];
+        const tokens: Array<string> = [];
         for (let i = this.#offset; i < this.#tokens.length; i++) {
             const token = this.#tokens[i];
-            tokens.push(`${ token.type }:${ token.text }`);
+            tokens.push(`${token.type}:${token.text}`);
         }
-        return `<TokenString ${ tokens.join(" ") }>`
+        return `<TokenString ${tokens.join(" ")}>`
     }
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 function lex(text: string): TokenString {
-    const tokens: Array<Token> = [ ];
+    const tokens: Array<Token> = [];
 
     const throwError = (message: string) => {
-        const token = (offset < text.length) ? JSON.stringify(text[offset]): "$EOI";
-        throw new Error(`invalid token ${ token } at ${ offset }: ${ message }`);
+        const token = (offset < text.length) ? JSON.stringify(text[offset]) : "$EOI";
+        throw new Error(`invalid token ${token} at ${offset}: ${message}`);
     };
 
-    let brackets: Array<number> = [ ];
-    let commas: Array<number> = [ ];
+    const brackets: Array<number> = [];
+    const commas: Array<number> = [];
 
     let offset = 0;
     while (offset < text.length) {
@@ -304,7 +304,7 @@ function lex(text: string): TokenString {
         const token = { depth: brackets.length, linkBack: -1, linkNext: -1, match: -1, type: "", text: "", offset, value: -1 };
         tokens.push(token);
 
-        let type = (SimpleTokens[cur[0]] || "");
+        const type = (SimpleTokens[cur[0]] || "");
         if (type) {
             token.type = type;
             token.text = cur[0];
@@ -376,7 +376,7 @@ function lex(text: string): TokenString {
             continue;
         }
 
-        throw new Error(`unexpected token ${ JSON.stringify(cur[0]) } at position ${ offset }`);
+        throw new Error(`unexpected token ${JSON.stringify(cur[0])} at position ${offset}`);
     }
 
     return new TokenString(tokens.map((t) => Object.freeze(t)));
@@ -384,11 +384,11 @@ function lex(text: string): TokenString {
 
 // Check only one of `allowed` is in `set`
 function allowSingle(set: ReadonlySet<string>, allowed: ReadonlySet<string>): void {
-    let included: Array<string> = [ ];
+    const included: Array<string> = [];
     for (const key in allowed.keys()) {
         if (set.has(key)) { included.push(key); }
     }
-    if (included.length > 1) { throw new Error(`conflicting types: ${ included.join(", ") }`); }
+    if (included.length > 1) { throw new Error(`conflicting types: ${included.join(", ")}`); }
 }
 
 // Functions to process a Solidity Signature TokenString from left-to-right for...
@@ -398,7 +398,7 @@ function consumeName(type: string, tokens: TokenString): string {
     if (tokens.peekKeyword(KwTypes)) {
         const keyword = tokens.pop().text;
         if (keyword !== type) {
-            throw new Error(`expected ${ type }, got ${ keyword }`);
+            throw new Error(`expected ${type}, got ${keyword}`);
         }
     }
 
@@ -408,13 +408,14 @@ function consumeName(type: string, tokens: TokenString): string {
 // ...all keywords matching allowed, returning the keywords
 function consumeKeywords(tokens: TokenString, allowed?: ReadonlySet<string>): ReadonlySet<string> {
     const keywords: Set<string> = new Set();
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const keyword = tokens.peekType("KEYWORD");
 
         if (keyword == null || (allowed && !allowed.has(keyword))) { break; }
         tokens.pop();
 
-        if (keywords.has(keyword)) { throw new Error(`duplicate keywords: ${ JSON.stringify(keyword) }`); }
+        if (keywords.has(keyword)) { throw new Error(`duplicate keywords: ${JSON.stringify(keyword)}`); }
         keywords.add(keyword);
     }
 
@@ -423,7 +424,7 @@ function consumeKeywords(tokens: TokenString, allowed?: ReadonlySet<string>): Re
 
 // ...all visibility keywords, returning the coalesced mutability
 function consumeMutability(tokens: TokenString): "payable" | "nonpayable" | "view" | "pure" {
-    let modifiers = consumeKeywords(tokens, KwVisib);
+    const modifiers = consumeKeywords(tokens, KwVisib);
 
     // Detect conflicting modifiers
     allowSingle(modifiers, setify("constant payable nonpayable".split(" ")));
@@ -460,7 +461,7 @@ function consumeGas(tokens: TokenString): null | bigint {
 
 function consumeEoi(tokens: TokenString): void {
     if (tokens.length) {
-        throw new Error(`unexpected tokens: ${ tokens.toString() }`);
+        throw new Error(`unexpected tokens: ${tokens.toString()}`);
     }
 }
 
@@ -487,7 +488,7 @@ function verifyBasicType(type: string): string {
 }
 
 // Make the Fragment constructors effectively private
-const _guard = { };
+const _guard = {};
 
 
 /**
@@ -604,11 +605,11 @@ export class ParamType {
     format(format?: FormatType): string {
         if (format == null) { format = "sighash"; }
         if (format === "json") {
-            let result: any = {
-                type: ((this.baseType === "tuple") ? "tuple": this.type),
+            const result: any = {
+                type: ((this.baseType === "tuple") ? "tuple" : this.type),
                 name: (this.name || undefined)
             };
-            if (typeof(this.indexed) === "boolean") { result.indexed = this.indexed; }
+            if (typeof (this.indexed) === "boolean") { result.indexed = this.indexed; }
             if (this.isTuple()) {
                 result.components = this.components.map((c) => JSON.parse(c.format(format)));
             }
@@ -620,15 +621,15 @@ export class ParamType {
         // Array
         if (this.isArray()) {
             result += this.arrayChildren.format(format);
-            result += `[${ (this.arrayLength < 0 ? "": String(this.arrayLength)) }]`;
+            result += `[${(this.arrayLength < 0 ? "" : String(this.arrayLength))}]`;
         } else {
-            if (this.isTuple()) {
-                if (format !== "sighash") { result += this.type; }
-                result += "(" + this.components.map(
+            if ((this as ParamType).isTuple()) {
+                if (format !== "sighash") { result += (this as ParamType).type; }
+                result += "(" + (this as ParamType).components!.map(
                     (comp) => comp.format(format)
-                ).join((format === "full") ? ", ": ",") + ")";
+                ).join((format === "full") ? ", " : ",") + ")";
             } else {
-                result += this.type;
+                result += (this as ParamType).type;
             }
         }
 
@@ -696,16 +697,16 @@ export class ParamType {
             return value.map((v) => (_this.arrayChildren.walk(v, process)));
         }
 
-        if (this.isTuple()) {
+        if ((this as ParamType).isTuple()) {
             if (!Array.isArray(value)) { throw new Error("invalid tuple value"); }
-            if (value.length !== this.components.length) {
+            if (value.length !== (this as ParamType).components!.length) {
                 throw new Error("array is wrong length");
             }
-            const _this = this;
-            return value.map((v, i) => (_this.components[i].walk(v, process)));
+            const _this = (this as ParamType);
+            return value.map((v, i) => (_this.components![i].walk(v, process)));
         }
 
-        return process(this.type, value);
+        return process((this as ParamType).type, value);
     }
 
     #walkAsync(promises: Array<Promise<void>>, value: any, process: ParamTypeWalkAsyncFunc, setValue: (value: any) => void): void {
@@ -727,8 +728,8 @@ export class ParamType {
             return;
         }
 
-        if (this.isTuple()) {
-            const components = this.components;
+        if ((this as ParamType).isTuple()) {
+            const components = (this as ParamType).components;
 
             // Convert the object into an array
             let result: Array<any>;
@@ -736,25 +737,25 @@ export class ParamType {
                 result = value.slice();
 
             } else {
-                if (value == null || typeof(value) !== "object") {
+                if (value == null || typeof (value) !== "object") {
                     throw new Error("invalid tuple value");
                 }
 
-                result = components.map((param) => {
+                result = components!.map((param) => {
                     if (!param.name) { throw new Error("cannot use object value with unnamed components"); }
                     if (!(param.name in value)) {
-                        throw new Error(`missing value for component ${ param.name }`);
+                        throw new Error(`missing value for component ${param.name}`);
                     }
                     return value[param.name];
                 });
             }
 
-            if (result.length !== this.components.length) {
+            if (result.length !== (this as ParamType).components!.length) {
                 throw new Error("array is wrong length");
             }
 
             result.forEach((value, index) => {
-                components[index].#walkAsync(promises, value, process, (value: any) => {
+                components![index].#walkAsync(promises, value, process, (value: any) => {
                     result[index] = value;
                 });
             });
@@ -762,9 +763,9 @@ export class ParamType {
             return;
         }
 
-        const result = process(this.type, value);
+        const result = process((this as ParamType).type, value);
         if (result.then) {
-            promises.push((async function() { setValue(await result); })());
+            promises.push((async function () { setValue(await result); })());
         } else {
             setValue(result);
         }
@@ -778,8 +779,8 @@ export class ParamType {
      *  ``"address"`` type.
      */
     async walkAsync(value: any, process: ParamTypeWalkAsyncFunc): Promise<any> {
-        const promises: Array<Promise<void>> = [ ];
-        const result: [ any ] = [ value ];
+        const promises: Array<Promise<void>> = [];
+        const result: [any] = [value];
         this.#walkAsync(promises, value, process, (value: any) => {
             result[0] = value;
         });
@@ -796,18 +797,18 @@ export class ParamType {
     static from(obj: any, allowIndexed?: boolean): ParamType {
         if (ParamType.isParamType(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
             return ParamType.from(lex(obj), allowIndexed);
 
         } else if (obj instanceof TokenString) {
             let type = "", baseType = "";
             let comps: null | Array<ParamType> = null;
 
-            if (consumeKeywords(obj, setify([ "tuple" ])).has("tuple") || obj.peekType("OPEN_PAREN")) {
+            if (consumeKeywords(obj, setify(["tuple"])).has("tuple") || obj.peekType("OPEN_PAREN")) {
                 // Tuple
                 baseType = "tuple";
                 comps = obj.popParams().map((t) => ParamType.from(t));
-                type = `tuple(${ comps.map((c) => c.format()).join(",") })`;
+                type = `tuple(${comps.map((c) => c.format()).join(",")})`;
             } else {
                 // Normal
                 type = verifyBasicType(obj.popType("TYPE"));
@@ -815,7 +816,7 @@ export class ParamType {
             }
 
             // Check for Array
-            let arrayChildren: null | ParamType  = null;
+            let arrayChildren: null | ParamType = null;
             let arrayLength: null | number = null;
 
             while (obj.length && obj.peekType("BRACKET")) {
@@ -834,7 +835,7 @@ export class ParamType {
                 indexed = true;
             }
 
-            const name = (obj.peekType("ID") ? obj.pop().text: "");
+            const name = (obj.peekType("ID") ? obj.pop().text : "");
 
             if (obj.length) { throw new Error("leftover tokens"); }
 
@@ -842,7 +843,7 @@ export class ParamType {
         }
 
         const name = obj.name;
-        assertArgument(!name || (typeof(name) === "string" && name.match(regexId)),
+        assertArgument(!name || (typeof (name) === "string" && name.match(regexId)),
             "invalid name", "obj.name", name);
 
         let indexed = obj.indexed;
@@ -853,7 +854,7 @@ export class ParamType {
 
         let type = obj.type;
 
-        let arrayMatch = type.match(regexArrayType);
+        const arrayMatch = type.match(regexArrayType);
         if (arrayMatch) {
             const arrayLength = parseInt(arrayMatch[2] || "-1");
             const arrayChildren = ParamType.from({
@@ -865,7 +866,7 @@ export class ParamType {
         }
 
         if (type === "tuple" || type.startsWith("tuple("/* fix: ) */) || type.startsWith("(" /* fix: ) */)) {
-            const comps = (obj.components != null) ? obj.components.map((c: any) => ParamType.from(c)): null;
+            const comps = (obj.components != null) ? obj.components.map((c: any) => ParamType.from(c)) : null;
             const tuple = new ParamType(_guard, name || "", type, "tuple", indexed, comps, null, null);
             // @TODO: use lexer to validate and normalize type
             return tuple;
@@ -922,12 +923,12 @@ export abstract class Fragment {
      *  ABI frgament type.
      */
     static from(obj: any): Fragment {
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
 
             // Try parsing JSON...
             try {
                 Fragment.from(JSON.parse(obj));
-            } catch (e) { }
+            } catch (e) { /* empty */ }
 
             // ...otherwise, use the human-readable lexer
             return Fragment.from(lex(obj));
@@ -948,10 +949,10 @@ export abstract class Fragment {
                 case "struct": return StructFragment.from(obj);
             }
 
-        } else if (typeof(obj) === "object") {
+        } else if (typeof (obj) === "object") {
             // JSON ABI
 
-            switch (obj.type) {
+            switch (obj.type.toLowerCase()) {
                 case "constructor": return ConstructorFragment.from(obj);
                 case "error": return ErrorFragment.from(obj);
                 case "event": return EventFragment.from(obj);
@@ -961,7 +962,7 @@ export abstract class Fragment {
                 case "struct": return StructFragment.from(obj);
             }
 
-            assert(false, `unsupported type: ${ obj.type }`, "UNSUPPORTED_OPERATION", {
+            assert(false, `unsupported type: ${obj.type}`, "UNSUPPORTED_OPERATION", {
                 operation: "Fragment.from"
             });
         }
@@ -1020,15 +1021,15 @@ export abstract class NamedFragment extends Fragment {
      */
     constructor(guard: any, type: FragmentType, name: string, inputs: ReadonlyArray<ParamType>) {
         super(guard, type, inputs);
-        assertArgument(typeof(name) === "string" && name.match(regexId),
+        assertArgument(typeof (name) === "string" && name.match(regexId),
             "invalid identifier", "name", name);
         inputs = Object.freeze(inputs.slice());
         defineProperties<NamedFragment>(this, { name });
     }
 }
 
-function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): string { 
-    return "(" + params.map((p) => p.format(format)).join((format === "full") ? ", ": ",") + ")";
+function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): string {
+    return "(" + params.map((p) => p.format(format)).join((format === "full") ? ", " : ",") + ")";
 }
 
 /**
@@ -1060,7 +1061,7 @@ export class ErrorFragment extends NamedFragment {
             });
         }
 
-        const result = [ ];
+        const result = [];
         if (format !== "sighash") { result.push("error"); }
         result.push(this.name + joinParams(format, this.inputs));
         return result.join(" ");
@@ -1069,7 +1070,7 @@ export class ErrorFragment extends NamedFragment {
     static from(obj: any): ErrorFragment {
         if (ErrorFragment.isFragment(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
             return ErrorFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
@@ -1081,7 +1082,7 @@ export class ErrorFragment extends NamedFragment {
         }
 
         return new ErrorFragment(_guard, obj.name,
-            obj.inputs ? obj.inputs.map(ParamType.from): [ ]);
+            obj.inputs ? obj.inputs.map(ParamType.from) : []);
     }
 
     static isFragment(value: any): value is ErrorFragment {
@@ -1122,7 +1123,7 @@ export class EventFragment extends NamedFragment {
             });
         }
 
-        const result = [ ];
+        const result = [];
         if (format !== "sighash") { result.push("event"); }
         result.push(this.name + joinParams(format, this.inputs));
         if (format !== "sighash" && this.anonymous) { result.push("anonymous"); }
@@ -1138,20 +1139,20 @@ export class EventFragment extends NamedFragment {
     static from(obj: any): EventFragment {
         if (EventFragment.isFragment(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
             return EventFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
             const name = consumeName("event", obj);
             const inputs = consumeParams(obj, true);
-            const anonymous = !!consumeKeywords(obj, setify([ "anonymous" ])).has("anonymous");
+            const anonymous = !!consumeKeywords(obj, setify(["anonymous"])).has("anonymous");
             consumeEoi(obj);
 
             return new EventFragment(_guard, name, inputs, anonymous);
         }
 
         return new EventFragment(_guard, obj.name,
-            obj.inputs ? obj.inputs.map((p: any) => ParamType.from(p, true)): [ ], !!obj.anonymous);
+            obj.inputs ? obj.inputs.map((p: any) => ParamType.from(p, true)) : [], !!obj.anonymous);
     }
 
     static isFragment(value: any): value is EventFragment {
@@ -1182,29 +1183,29 @@ export class ConstructorFragment extends Fragment {
         if (format === "json") {
             return JSON.stringify({
                 type: "constructor",
-                stateMutability: (this.payable ? "payable": "undefined"),
+                stateMutability: (this.payable ? "payable" : "undefined"),
                 payable: this.payable,
-                gas: ((this.gas != null) ? this.gas: undefined),
+                gas: ((this.gas != null) ? this.gas : undefined),
                 inputs: this.inputs.map((i) => JSON.parse(i.format(format)))
             });
         }
 
-        const result = [ `constructor${ joinParams(format, this.inputs) }` ];
-        result.push((this.payable) ? "payable": "nonpayable");
-        if (this.gas != null) { result.push(`@${ this.gas.toString() }`); }
+        const result = [`constructor${joinParams(format, this.inputs)}`];
+        result.push((this.payable) ? "payable" : "nonpayable");
+        if (this.gas != null) { result.push(`@${this.gas.toString()}`); }
         return result.join(" ");
     }
 
     static from(obj: any): ConstructorFragment {
         if (ConstructorFragment.isFragment(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
             return ConstructorFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
-            consumeKeywords(obj, setify([ "constructor" ]));
+            consumeKeywords(obj, setify(["constructor"]));
             const inputs = consumeParams(obj);
-            const payable = !!consumeKeywords(obj, setify([ "payable" ])).has("payable");
+            const payable = !!consumeKeywords(obj, setify(["payable"])).has("payable");
             const gas = consumeGas(obj);
             consumeEoi(obj);
 
@@ -1212,8 +1213,8 @@ export class ConstructorFragment extends Fragment {
         }
 
         return new ConstructorFragment(_guard, "constructor",
-            obj.inputs ? obj.inputs.map(ParamType.from): [ ],
-            !!obj.payable, (obj.gas != null) ? obj.gas: null);
+            obj.inputs ? obj.inputs.map(ParamType.from) : [],
+            !!obj.payable, (obj.gas != null) ? obj.gas : null);
     }
 
     static isFragment(value: any): value is ConstructorFragment {
@@ -1238,37 +1239,37 @@ export class FallbackFragment extends Fragment {
     }
 
     format(format?: FormatType): string {
-        const type = ((this.inputs.length === 0) ? "receive": "fallback");
+        const type = ((this.inputs.length === 0) ? "receive" : "fallback");
 
         if (format === "json") {
-            const stateMutability = (this.payable ? "payable": "nonpayable");
+            const stateMutability = (this.payable ? "payable" : "nonpayable");
             return JSON.stringify({ type, stateMutability });
         }
 
-        return `${ type }()${ this.payable ? " payable": "" }`;
+        return `${type}()${this.payable ? " payable" : ""}`;
     }
 
     static from(obj: any): FallbackFragment {
         if (FallbackFragment.isFragment(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
-             return FallbackFragment.from(lex(obj));
+        if (typeof (obj) === "string") {
+            return FallbackFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
             const errorObj = obj.toString();
 
-            const topIsValid = obj.peekKeyword(setify([ "fallback", "receive" ]));
+            const topIsValid = obj.peekKeyword(setify(["fallback", "receive"]));
             assertArgument(topIsValid, "type must be fallback or receive", "obj", errorObj);
 
-            const type = obj.popKeyword(setify([ "fallback", "receive" ]));
+            const type = obj.popKeyword(setify(["fallback", "receive"]));
 
             // receive()
             if (type === "receive") {
                 const inputs = consumeParams(obj);
                 assertArgument(inputs.length === 0, `receive cannot have arguments`, "obj.inputs", inputs);
-                consumeKeywords(obj, setify([ "payable" ]));
+                consumeKeywords(obj, setify(["payable"]));
                 consumeEoi(obj);
-                return new FallbackFragment(_guard, [ ], true);
+                return new FallbackFragment(_guard, [], true);
             }
 
             // fallback() [payable]
@@ -1279,13 +1280,13 @@ export class FallbackFragment extends Fragment {
                     "invalid fallback inputs", "obj.inputs",
                     inputs.map((i) => i.format("minimal")).join(", "));
             } else {
-                inputs = [ ParamType.from("bytes") ];
+                inputs = [ParamType.from("bytes")];
             }
 
             const mutability = consumeMutability(obj);
             assertArgument(mutability === "nonpayable" || mutability === "payable", "fallback cannot be constants", "obj.stateMutability", mutability);
 
-            if (consumeKeywords(obj, setify([ "returns" ])).has("returns")) {
+            if (consumeKeywords(obj, setify(["returns"])).has("returns")) {
                 const outputs = consumeParams(obj);
                 assertArgument(outputs.length === 1 && outputs[0].type === "bytes",
                     "invalid fallback outputs", "obj.outputs",
@@ -1298,11 +1299,11 @@ export class FallbackFragment extends Fragment {
         }
 
         if (obj.type === "receive") {
-            return new FallbackFragment(_guard, [ ], true);
+            return new FallbackFragment(_guard, [], true);
         }
 
         if (obj.type === "fallback") {
-            const inputs = [ ParamType.from("bytes") ];
+            const inputs = [ParamType.from("bytes")];
             const payable = (obj.stateMutability === "payable");
             return new FallbackFragment(_guard, inputs, payable);
         }
@@ -1349,13 +1350,14 @@ export class FunctionFragment extends NamedFragment {
     /**
      *  @private
      */
-    constructor(guard: any, name: string, stateMutability: "payable" | "nonpayable" | "view" | "pure", inputs: ReadonlyArray<ParamType>, outputs: ReadonlyArray<ParamType>, gas: null | bigint) {
+    constructor(guard: any, name: string, stateMutability_: "payable" | "nonpayable" | "view" | "pure", inputs: ReadonlyArray<ParamType>, outputs: ReadonlyArray<ParamType>, gas: null | bigint) {
+        const stateMutability = stateMutability_.toLowerCase()
         super(guard, "function", name, inputs);
         Object.defineProperty(this, internal, { value: FunctionFragmentInternal });
         outputs = Object.freeze(outputs.slice());
         const constant = (stateMutability === "view" || stateMutability === "pure");
         const payable = (stateMutability === "payable");
-        defineProperties<FunctionFragment>(this, { constant, gas, outputs, payable, stateMutability });
+        defineProperties<FunctionFragment>(this, { constant, gas, outputs, payable, stateMutability: stateMutability as any });
     }
 
     /**
@@ -1372,9 +1374,9 @@ export class FunctionFragment extends NamedFragment {
                 type: "function",
                 name: this.name,
                 constant: this.constant,
-                stateMutability: ((this.stateMutability !== "nonpayable") ? this.stateMutability: undefined),
+                stateMutability: ((this.stateMutability !== "nonpayable") ? this.stateMutability : undefined),
                 payable: this.payable,
-                gas: ((this.gas != null) ? this.gas: undefined),
+                gas: ((this.gas != null) ? this.gas : undefined),
                 inputs: this.inputs.map((i) => JSON.parse(i.format(format))),
                 outputs: this.outputs.map((o) => JSON.parse(o.format(format))),
             });
@@ -1396,30 +1398,30 @@ export class FunctionFragment extends NamedFragment {
                 result.push(joinParams(format, this.outputs));
             }
 
-            if (this.gas != null) { result.push(`@${ this.gas.toString() }`); }
+            if (this.gas != null) { result.push(`@${this.gas.toString()}`); }
         }
         return result.join(" ");
     }
 
     static getSelector(name: string, params?: Array<any>): string {
         params = (params || []).map((p) => ParamType.from(p));
-        const fragment = new FunctionFragment(_guard, name, "view", params, [ ], null);
+        const fragment = new FunctionFragment(_guard, name, "view", params, [], null);
         return fragment.selector;
     }
 
     static from(obj: any): FunctionFragment {
         if (FunctionFragment.isFragment(obj)) { return obj; }
 
-        if (typeof(obj) === "string") {
-             return FunctionFragment.from(lex(obj));
+        if (typeof (obj) === "string") {
+            return FunctionFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
             const name = consumeName("function", obj);
             const inputs = consumeParams(obj);
             const mutability = consumeMutability(obj);
 
-            let outputs: Array<ParamType> = [ ];
-            if (consumeKeywords(obj, setify([ "returns" ])).has("returns")) {
+            let outputs: Array<ParamType> = [];
+            if (consumeKeywords(obj, setify(["returns"])).has("returns")) {
                 outputs = consumeParams(obj);
             }
 
@@ -1436,15 +1438,15 @@ export class FunctionFragment extends NamedFragment {
         if (stateMutability == null) {
             stateMutability = "payable";
 
-            if (typeof(obj.constant) === "boolean") {
+            if (typeof (obj.constant) === "boolean") {
                 stateMutability = "view";
                 if (!obj.constant) {
                     stateMutability = "payable"
-                    if (typeof(obj.payable) === "boolean" && !obj.payable) {
+                    if (typeof (obj.payable) === "boolean" && !obj.payable) {
                         stateMutability = "nonpayable";
                     }
                 }
-            } else if (typeof(obj.payable) === "boolean" && !obj.payable) {
+            } else if (typeof (obj.payable) === "boolean" && !obj.payable) {
                 stateMutability = "nonpayable";
             }
         }
@@ -1453,9 +1455,9 @@ export class FunctionFragment extends NamedFragment {
         //        payable: false but stateMutability is "nonpayable")
 
         return new FunctionFragment(_guard, obj.name, stateMutability,
-             obj.inputs ? obj.inputs.map(ParamType.from): [ ],
-             obj.outputs ? obj.outputs.map(ParamType.from): [ ],
-             (obj.gas != null) ? obj.gas: null);
+            obj.inputs ? obj.inputs.map(ParamType.from) : [],
+            obj.outputs ? obj.outputs.map(ParamType.from) : [],
+            (obj.gas != null) ? obj.gas : null);
     }
 
     static isFragment(value: any): value is FunctionFragment {
@@ -1481,7 +1483,7 @@ export class StructFragment extends NamedFragment {
     }
 
     static from(obj: any): StructFragment {
-        if (typeof(obj) === "string") {
+        if (typeof (obj) === "string") {
             return StructFragment.from(lex(obj));
 
         } else if (obj instanceof TokenString) {
@@ -1491,7 +1493,7 @@ export class StructFragment extends NamedFragment {
             return new StructFragment(_guard, name, inputs);
         }
 
-        return new StructFragment(_guard, obj.name, obj.inputs ? obj.inputs.map(ParamType.from): [ ]);
+        return new StructFragment(_guard, obj.name, obj.inputs ? obj.inputs.map(ParamType.from) : []);
     }
 
     static isFragment(value: any): value is FunctionFragment {

@@ -4,7 +4,7 @@
  *
  *  @_subsection api/utils:Data Helpers  [about-data]
  */
-import { assert, assertArgument } from "./errors.js";
+import { assert, assertArgument } from "./errors";
 
 /**
  *  A [[HexString]] whose length is even, which ensures it is a valid
@@ -93,7 +93,7 @@ export function isBytesLike(value: any): value is BytesLike {
     return (isHexString(value, true) || (value instanceof Uint8Array));
 }
 
-const HexCharacters: string = "0123456789abcdef";
+const HexCharacters = "0123456789abcdef";
 
 /**
  *  Returns a [[DataHexString]] representation of %%data%%.
@@ -155,7 +155,7 @@ function zeroPad(data: BytesLike, length: number, left: boolean): string {
     const bytes = getBytes(data);
     assert(length >= bytes.length, "padding exceeds data length", "BUFFER_OVERRUN", {
         buffer: new Uint8Array(bytes),
-        length: length,
+        length,
         offset: length + 1
     });
 

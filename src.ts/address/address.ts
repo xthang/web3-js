@@ -1,14 +1,16 @@
-import { keccak256 } from "../crypto/index.js";
-import { getBytes, assertArgument } from "../utils/index.js";
+import { keccak256, sha256 } from "../crypto/index";
+import { ChainNamespace } from "../providers/network";
+import { DataHexString, HexString } from "../utils/data";
+import { assertArgument, decodeBase58, encodeBase58 } from "../utils/index";
 
 
 const BN_0 = BigInt(0);
 const BN_36 = BigInt(36);
 
 function getChecksumAddress(address: string): string {
-//    if (!isHexString(address, 20)) {
-//        logger.throwArgumentError("invalid address", "address", address);
-//    }
+    //    if (!isHexString(address, 20)) {
+    //        logger.throwArgumentError("invalid address", "address", address);
+    //    }
 
     address = address.toLowerCase();
 
@@ -19,7 +21,7 @@ function getChecksumAddress(address: string): string {
         expanded[i] = chars[i].charCodeAt(0);
     }
 
-    const hashed = getBytes(keccak256(expanded));
+    const hashed = keccak256(expanded)
 
     for (let i = 0; i < 40; i += 2) {
         if ((hashed[i >> 1] >> 4) >= 8) {
@@ -36,7 +38,7 @@ function getChecksumAddress(address: string): string {
 // See: https://en.wikipedia.org/wiki/International_Bank_Account_Number
 
 // Create lookup table
-const ibanLookup: { [character: string]: string } = { };
+const ibanLookup: { [character: string]: string } = {};
 for (let i = 0; i < 10; i++) { ibanLookup[String(i)] = String(i); }
 for (let i = 0; i < 26; i++) { ibanLookup[String.fromCharCode(65 + i)] = String(10 + i); }
 
@@ -51,7 +53,7 @@ function ibanChecksum(address: string): string {
     let expanded = address.split("").map((c) => { return ibanLookup[c]; }).join("");
 
     // Javascript can handle integers safely up to 15 (decimal) digits
-    while (expanded.length >= safeDigits){
+    while (expanded.length >= safeDigits) {
         let block = expanded.substring(0, safeDigits);
         expanded = parseInt(block, 10) % 97 + expanded.substring(block.length);
     }
@@ -62,8 +64,8 @@ function ibanChecksum(address: string): string {
     return checksum;
 };
 
-const Base36 = (function() {;
-    const result: Record<string, bigint> = { };
+const Base36 = (function () {
+    const result: Record<string, bigint> = {};
     for (let i = 0; i < 36; i++) {
         const key = "0123456789abcdefghijklmnopqrstuvwxyz"[i];
         result[key] = BigInt(i);
@@ -116,9 +118,8 @@ function fromBase36(value: string): bigint {
  *    getAddress("0x8Ba1f109551bD432803012645Ac136ddd64DBA72")
  *    //_error:
  */
-export function getAddress(address: string): string {
-
-    assertArgument(typeof(address) === "string", "invalid address", "address", address);
+export function formatHexAddress(address: string): string {
+    assertArgument(typeof (address) === "string", "invalid address", "address", address);
 
     if (address.match(/^(0x)?[0-9a-fA-F]{40}$/)) {
 
@@ -141,10 +142,30 @@ export function getAddress(address: string): string {
 
         let result = fromBase36(address.substring(4)).toString(16);
         while (result.length < 40) { result = "0" + result; }
-        return  getChecksumAddress("0x" + result);
+        return getChecksumAddress("0x" + result);
     }
 
     assertArgument(false, "invalid address", "address", address);
+}
+
+export function getAddress(address: string, chainNamespace: ChainNamespace): string {
+    assertArgument(typeof (address) === "string", "invalid address", "address", address);
+
+    if (chainNamespace === ChainNamespace.eip155) {
+        return formatHexAddress(address)
+    } else if (chainNamespace === ChainNamespace.solana || chainNamespace === ChainNamespace.tron) {
+        return address
+    } else throw new Error('Chain namespace not supported: ' + chainNamespace)
+}
+
+export function convertToHexAddress(address: string, chainNamespace: ChainNamespace): string {
+    assertArgument(typeof (address) === "string", "invalid address", "address", address);
+
+    if (chainNamespace === ChainNamespace.solana || chainNamespace === ChainNamespace.tron) {
+        address = base58ToHex_Tron(address)
+    }
+
+    return formatHexAddress(address)
 }
 
 /**
@@ -167,7 +188,28 @@ export function getAddress(address: string): string {
  */
 export function getIcapAddress(address: string): string {
     //let base36 = _base16To36(getAddress(address).substring(2)).toUpperCase();
-    let base36 = BigInt(getAddress(address)).toString(36).toUpperCase();
+    let base36 = BigInt(getAddress(address, ChainNamespace.eip155)).toString(36).toUpperCase();
     while (base36.length < 30) { base36 = "0" + base36; }
     return "XE" + ibanChecksum("XE00" + base36) + base36;
+}
+
+export function getBase58CheckAddress(address: string): string {
+    const hash0 = sha256(address);
+    const hash1 = sha256(hash0);
+
+    let checkSum = hash1.slice(2, 10);
+    checkSum = address.concat(checkSum)
+
+    return encodeBase58(checkSum);
+}
+
+/**
+ *  Convert the Base58-encoded %%value%% to Hex.
+ */
+function base58ToHex(value: string): DataHexString {
+    return decodeBase58(value).toString(16)
+}
+
+export function base58ToHex_Tron(value: string): HexString {
+    return '0x' + base58ToHex(value).substring(2, 42)
 }

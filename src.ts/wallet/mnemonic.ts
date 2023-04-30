@@ -1,11 +1,10 @@
-import { pbkdf2, sha256 } from "../crypto/index.js";
+import { pbkdf2, sha256 } from "../crypto/index";
 import {
     defineProperties, getBytes, hexlify, assertNormalize, assertPrivate, assertArgument, toUtf8Bytes
-} from "../utils/index.js";
-import { LangEn } from "../wordlists/lang-en.js";
-
-import type { BytesLike } from "../utils/index.js";
-import type { Wordlist } from "../wordlists/index.js";
+} from "../utils/index";
+import type { BytesLike } from "../utils/index";
+import type { Wordlist } from "../wordlists/index";
+import { LangEn } from "../wordlists/lang-en";
 
 
 // Returns a byte with the MSB bits set
@@ -32,7 +31,7 @@ function mnemonicToEntropy(mnemonic: string, wordlist?: null | Wordlist): string
 
     let offset = 0;
     for (let i = 0; i < words.length; i++) {
-        let index = wordlist.getWordIndex(words[i].normalize("NFKD"));
+        const index = wordlist.getWordIndex(words[i].normalize("NFKD"));
         assertArgument(index >= 0, `invalid mnemonic word at index ${ i }`, "mnemonic", "[ REDACTED ]");
 
         for (let bit = 0; bit < 11; bit++) {

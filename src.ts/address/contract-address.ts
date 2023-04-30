@@ -1,11 +1,11 @@
-import { keccak256 } from "../crypto/index.js";
+import { keccak256 } from "../crypto/index";
 import {
     concat, dataSlice, getBigInt, getBytes, encodeRlp, assertArgument
-} from "../utils/index.js";
+} from "../utils/index";
 
-import { getAddress } from "./address.js";
+import { formatHexAddress } from "./address";
 
-import type { BigNumberish, BytesLike } from "../utils/index.js";
+import type { BigNumberish, BytesLike } from "../utils/index";
 
 
 // http://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
@@ -29,7 +29,7 @@ import type { BigNumberish, BytesLike } from "../utils/index.js";
  *    //_result:
  */
 export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): string {
-    const from = getAddress(tx.from);
+    const from = formatHexAddress(tx.from);
     const nonce = getBigInt(tx.nonce, "tx.nonce");
 
     let nonceHex = nonce.toString(16);
@@ -41,7 +41,7 @@ export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): str
         nonceHex = "0x" + nonceHex;
     }
 
-    return getAddress(dataSlice(keccak256(encodeRlp([ from, nonceHex ])), 12));
+    return formatHexAddress(dataSlice(keccak256(encodeRlp([ from, nonceHex ])), 12));
 }
 
 /**
@@ -68,7 +68,7 @@ export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): str
  *    //_result:
  */
 export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash: BytesLike): string {
-    const from = getAddress(_from);
+    const from = formatHexAddress(_from);
     const salt = getBytes(_salt, "salt");
     const initCodeHash = getBytes(_initCodeHash, "initCodeHash");
 
@@ -76,5 +76,5 @@ export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash
 
     assertArgument(initCodeHash.length === 32, "initCodeHash must be 32 bytes", "initCodeHash", _initCodeHash);
 
-    return getAddress(dataSlice(keccak256(concat([ "0xff", from, salt, initCodeHash ])), 12))
+    return formatHexAddress(dataSlice(keccak256(concat([ "0xff", from, salt, initCodeHash ])), 12))
 }

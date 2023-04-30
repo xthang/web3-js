@@ -1,3 +1,4 @@
+import { ChainNamespace } from "../providers/network"
 
 
 export type TestCaseAbiVerbose = {
@@ -195,6 +196,7 @@ export interface TestCaseTransactionTx {
 
     accessList?: Array<{ address: string, storageKeys: Array<string> }>;
 
+    chainNamespace: ChainNamespace;
     chainId?: string;
 }
 

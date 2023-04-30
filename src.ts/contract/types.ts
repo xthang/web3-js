@@ -1,11 +1,12 @@
 import type {
     EventFragment, FunctionFragment, Result, Typed
-} from "../abi/index.js";
+} from "../abi/index";
 import type {
     TransactionRequest, PreparedTransactionRequest, TopicFilter
-} from "../providers/index.js";
+} from "../providers/index";
+import { ChainNamespace } from "../providers/network";
 
-import type { ContractTransactionResponse } from "./wrappers.js";
+import type { ContractTransactionResponse } from "./wrappers";
 
 
 // The types of events a Contract can listen for
@@ -88,8 +89,8 @@ export interface ContractEvent<A extends Array<any> = Array<any>> {
 export interface WrappedFallback {
     (overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse>;
 
-    populateTransaction(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransaction>;
-    staticCall(overrides?: Omit<TransactionRequest, "to">): Promise<string>;
-    send(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse>;
-    estimateGas(overrides?: Omit<TransactionRequest, "to">): Promise<bigint>;
+    populateTransaction(chainNamespace: ChainNamespace, overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransaction>;
+    staticCall(chainNamespace: ChainNamespace, overrides?: Omit<TransactionRequest, "to">): Promise<string>;
+    send(chainNamespace: ChainNamespace, overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse>;
+    estimateGas(chainNamespace: ChainNamespace, overrides?: Omit<TransactionRequest, "to">): Promise<bigint>;
 }

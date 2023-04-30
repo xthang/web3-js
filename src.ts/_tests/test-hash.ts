@@ -5,14 +5,15 @@ import {
     namehash, isValidName,
     solidityPacked, solidityPackedKeccak256, solidityPackedSha256,
     isError
-} from "../index.js";
+} from "../index";
 
-import { loadTests } from "./utils.js"
+import { loadTests } from "./utils"
 
-import type { TestCaseNamehash, TestCaseSolidityHash } from "./types.js";
+import type { TestCaseNamehash, TestCaseSolidityHash } from "./types";
+import { ChainNamespace } from "../providers/network";
 
 
-//import { dnsEncode, isValidName, namehash } from "../index.js";
+//import { dnsEncode, isValidName, namehash } from "../index";
 
 describe("Tests Namehash", function() {
     const tests = loadTests<TestCaseNamehash>("namehash");
@@ -172,13 +173,13 @@ describe("Test Solidity Hash functions", function() {
 
     for (const test of tests) {
         it(`computes the solidity keccak256: ${ test.name }`, function() {
-            assert.equal(solidityPackedKeccak256(test.types, test.values), test.keccak256);
+            assert.equal(solidityPackedKeccak256(ChainNamespace.eip155, test.types, test.values), test.keccak256);
         });
     }
 
     for (const test of tests) {
         it(`computes the solidity sha256: ${ test.name }`, function() {
-            assert.equal(solidityPackedSha256(test.types, test.values), test.sha256);
+            assert.equal(solidityPackedSha256(ChainNamespace.eip155, test.types, test.values), test.sha256);
         });
     }
 
@@ -191,7 +192,7 @@ describe("Test Solidity Hash functions", function() {
     for (const { types, values } of badTypes) {
         it("correctly fails on invalid type", function() {
             assert.throws(function() {
-                const result = solidityPacked(types, values);
+                const result = solidityPacked(ChainNamespace.eip155, types, values);
                 console.log(result);
             }, function (error) {
                 return (isError(error, "INVALID_ARGUMENT") && error.argument === "type");

@@ -1,15 +1,16 @@
 
 import assert from "assert";
 
-import { wordlists } from "../wordlists/wordlists.js";
+import { wordlists } from "../wordlists/wordlists";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import { HDNodeWallet, HDNodeVoidWallet, Mnemonic } from "../index.js";
+import { HDNodeWallet, HDNodeVoidWallet, Mnemonic } from "../index";
 
-import type { Wordlist } from "../wordlists/index.js";
+import type { Wordlist } from "../wordlists/index";
 
-import type { TestCaseMnemonic, TestCaseMnemonicNode } from "./types.js";
+import type { TestCaseMnemonic, TestCaseMnemonicNode } from "./types";
+import { ChainNamespace } from "../providers/network";
 
 /*
 declare global {
@@ -112,7 +113,7 @@ describe("Test HDWallets", function() {
     for (const { test } of checks) {
         it(`computes the HD keys by enxtended private key: ${ test.name }`, function() {
             for (const subtest of test.nodes) {
-                const w = HDNodeWallet.fromExtendedKey(subtest.xpriv);
+                const w = HDNodeWallet.fromExtendedKey(subtest.xpriv, ChainNamespace.eip155);
                 assert.ok(w instanceof HDNodeWallet, "instanceof HDNodeWallet");
                 checkWallet(w, subtest);
                 assert.equal(w.mnemonic, null);
@@ -146,7 +147,7 @@ describe("Test HDWallets", function() {
     for (const { test } of checks) {
         it(`computes the neutered HD keys by enxtended public key: ${ test.name }`, function() {
             for (const subtest of test.nodes) {
-                const w = HDNodeWallet.fromExtendedKey(subtest.xpub);
+                const w = HDNodeWallet.fromExtendedKey(subtest.xpub, ChainNamespace.eip155);
                 assert.ok(w instanceof HDNodeVoidWallet, "instanceof HDNodeVoidWallet");
                 checkWallet(w, subtest);
             }

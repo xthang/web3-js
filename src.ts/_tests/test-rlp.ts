@@ -1,10 +1,10 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import { decodeRlp, encodeRlp } from "../index.js";
+import { decodeRlp, encodeRlp } from "../index";
 
-import type { TestCaseRlp } from "./types.js";
+import type { TestCaseRlp } from "./types";
 
 describe("Test RLP Coder", function() {
 

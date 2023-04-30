@@ -1,0 +1,5 @@
+*.config.ts
+*.d.ts
+/ignore
+/node_modules
+/build

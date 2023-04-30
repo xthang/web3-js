@@ -3,9 +3,9 @@ import {
     defineProperties, concat, getBytesCopy, getNumber, hexlify,
     toBeArray, toBigInt, toNumber,
     assert, assertArgument
-} from "../../utils/index.js";
+} from "../../utils/index";
 
-import type { BigNumberish, BytesLike } from "../../utils/index.js";
+import type { BigNumberish, BytesLike } from "../../utils/index";
 
 /**
  * @_ignore:

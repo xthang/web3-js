@@ -4,7 +4,7 @@
 
 import {
     getBytesCopy, assertArgument, toUtf8Bytes
-} from "../utils/index.js";
+} from "../utils/index";
 
 export function looseArrayify(hexString: string): Uint8Array {
     if (typeof(hexString) === "string" && !hexString.startsWith("0x")) {

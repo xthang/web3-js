@@ -1,14 +1,14 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import type { TestCaseHash, TestCaseHmac, TestCasePbkdf } from "./types.js";
+import type { TestCaseHash, TestCaseHmac, TestCasePbkdf } from "./types";
 
 import {
     computeHmac,
     keccak256, ripemd160, sha256, sha512,
     pbkdf2, scrypt, scryptSync
-} from "../index.js";
+} from "../index";
 
 
 describe("test hashing", function() {

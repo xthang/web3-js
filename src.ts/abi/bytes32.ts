@@ -6,9 +6,8 @@
 
 import {
     getBytes, toUtf8Bytes, toUtf8String, zeroPadBytes
-} from "../utils/index.js";
-
-import type { BytesLike } from "../utils/index.js";
+} from "../utils/index";
+import type { BytesLike } from "../utils/index";
 
 /**
  *  Encodes %%text%% as a Bytes32 string.

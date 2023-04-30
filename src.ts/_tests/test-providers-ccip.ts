@@ -5,9 +5,9 @@ import {
     keccak256,
     toBeArray,
     isCallException, isError
-} from "../index.js";
+} from "../index";
 
-import { connect, setupProviders } from "./create-provider.js";
+import { connect, setupProviders } from "./create-provider";
 
 setupProviders();
 
@@ -97,7 +97,7 @@ describe("Test CCIP execution", function() {
             const result = await provider.call(tx);
             console.log(result);
         }, (error: unknown) => {
-            const infoJson = '{"urls":["https:/\/ethers.ricmoo.workers.dev/status/500/{sender}/{data}"],"errorMessages":["hello world"]}';
+            const infoJson = '{"urls":["https://ethers.ricmoo.workers.dev/status/500/{sender}/{data}"],"errorMessages":["hello world"]}';
             return (isError(error, "OFFCHAIN_FAULT") && error.reason === "500_SERVER_ERROR" &&
                 JSON.stringify(error.info) === infoJson);
         });
@@ -143,7 +143,7 @@ describe("Test CCIP execution", function() {
             const result = await provider.call(tx);
             console.log(result);
         }, (error: unknown) => {
-            const infoJson = '{"url":"https:/\/ethers.ricmoo.workers.dev/status/404/{sender}/{data}","errorMessage":"hello world"}';
+            const infoJson = '{"url":"https://ethers.ricmoo.workers.dev/status/404/{sender}/{data}","errorMessage":"hello world"}';
             return (isError(error, "OFFCHAIN_FAULT") && error.reason === "404_MISSING_RESOURCE" &&
                 JSON.stringify(error.info || "") === infoJson);
         });

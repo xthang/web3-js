@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { resolve } from "./path.js";
+import { resolve } from "./path";
 
 export function atomicWrite(path: string, value: string | Uint8Array): void {
     const tmp = resolve(".atomic-tmp");

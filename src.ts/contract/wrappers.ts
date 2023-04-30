@@ -2,17 +2,17 @@
 // from EtherscanProvider
 import {
     Block, Log, TransactionReceipt, TransactionResponse
-} from "../providers/provider.js";
-import { defineProperties, EventPayload } from "../utils/index.js";
+} from "../providers/provider";
+import { defineProperties, EventPayload } from "../utils/index";
 
-import type { EventFragment, Interface, Result } from "../abi/index.js";
-import type { Listener } from "../utils/index.js";
+import type { EventFragment, Interface, Result } from "../abi/index";
+import type { Listener } from "../utils/index";
 import type {
     Provider
-} from "../providers/index.js";
+} from "../providers/index";
 
-import type { BaseContract } from "./contract.js";
-import type { ContractEventName } from "./types.js";
+import type { BaseContract } from "./contract";
+import type { ContractEventName } from "./types";
 
 
 export class EventLog extends Log {

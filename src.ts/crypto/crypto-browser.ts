@@ -5,7 +5,7 @@ import { pbkdf2 } from "@noble/hashes/pbkdf2";
 import { sha256 } from "@noble/hashes/sha256";
 import { sha512 } from "@noble/hashes/sha512";
 
-import { assert, assertArgument } from "../utils/index.js";
+import { assert, assertArgument } from "../utils/index";
 
 
 declare global {

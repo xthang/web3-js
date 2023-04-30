@@ -9,29 +9,26 @@
 
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
-import { AbiCoder } from "../abi/index.js";
-import { getAddress, resolveAddress } from "../address/index.js";
-import { TypedDataEncoder } from "../hash/index.js";
-import { accessListify } from "../transaction/index.js";
+import { AbiCoder } from "../abi/index";
+import { getAddress, resolveAddress } from "../address/index";
+import { TypedDataEncoder } from "../hash/index";
+import type { TypedDataDomain, TypedDataField } from "../hash/index";
+import { accessListify } from "../transaction/index";
+import type { TransactionLike } from "../transaction/index";
 import {
     defineProperties, getBigInt, hexlify, isHexString, toQuantity, toUtf8Bytes,
     makeError, assert, assertArgument,
     FetchRequest, resolveProperties
-} from "../utils/index.js";
-
-import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
-import { AbstractSigner } from "./abstract-signer.js";
-import { Network } from "./network.js";
-import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid.js";
-import { PollingEventSubscriber } from "./subscriber-polling.js";
-
-import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
-import type { TransactionLike } from "../transaction/index.js";
-
-import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider.js";
-import type { Networkish } from "./network.js";
-import type { Provider, TransactionRequest, TransactionResponse } from "./provider.js";
-import type { Signer } from "./signer.js";
+} from "../utils/index";
+import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider";
+import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider";
+import { AbstractSigner } from "./abstract-signer";
+import { ChainNamespace, Network } from "./network";
+import type { Networkish } from "./network";
+import type { Provider, TransactionRequest, TransactionResponse } from "./provider";
+import type { Signer } from "./signer";
+import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid";
+import { PollingEventSubscriber } from "./subscriber-polling";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -39,25 +36,25 @@ type Timer = ReturnType<typeof setTimeout>;
 const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
 //const Methods = "getAddress,then".split(/,/g);
 function deepCopy<T = any>(value: T): T {
-    if (value == null || Primitive.indexOf(typeof(value)) >= 0) {
+    if (value == null || Primitive.indexOf(typeof (value)) >= 0) {
         return value;
     }
 
     // Keep any Addressable
-    if (typeof((<any>value).getAddress) === "function") {
+    if (typeof ((<any>value).getAddress) === "function") {
         return value;
     }
 
     if (Array.isArray(value)) { return <any>(value.map(deepCopy)); }
 
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         return Object.keys(value).reduce((accum, key) => {
             accum[key] = (<any>value)[key];
             return accum;
-        }, <any>{ });
+        }, <any>{});
     }
 
-    throw new Error(`should not happen: ${ value } (${ typeof(value) })`);
+    throw new Error(`should not happen: ${value} (${typeof (value)})`);
 }
 
 function stall(duration: number): Promise<void> {
@@ -74,7 +71,7 @@ interface Pollable {
 }
 
 function isPollable(value: any): value is Pollable {
-    return (value && typeof(value.pollingInterval) === "number");
+    return (value && typeof (value.pollingInterval) === "number");
 }
 
 /**
@@ -169,22 +166,22 @@ const defaultOptions = {
 }
 
 export interface JsonRpcTransactionRequest {
-     from?: string;
-     to?: string;
-     data?: string;
+    from?: string;
+    to?: string;
+    data?: string;
 
-     chainId?: string;
-     type?: string;
-     gas?: string;
+    chainId?: string;
+    type?: string;
+    gas?: string;
 
-     gasPrice?: string;
-     maxFeePerGas?: string;
-     maxPriorityFeePerGas?: string;
+    gasPrice?: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
 
-     nonce?: string;
-     value?: string;
+    nonce?: string;
+    value?: string;
 
-     accessList?: Array<{ address: string, storageKeys: Array<string> }>;
+    accessList?: Array<{ address: string, storageKeys: Array<string> }>;
 }
 
 // @TODO: Unchecked Signers
@@ -194,7 +191,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     constructor(provider: JsonRpcApiProvider, address: string) {
         super(provider);
-        address = getAddress(address);
+        address = getAddress(address, this.provider.chainNamespace);
         defineProperties<JsonRpcSigner>(this, { address });
     }
 
@@ -206,6 +203,10 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     async getAddress(): Promise<string> {
         return this.address;
+    }
+
+    populateCall(tx: TransactionRequest): Promise<TransactionLike<string>> {
+        throw new Error("Method not implemented.");
     }
 
     // JSON-RPC will automatially fill in nonce, etc. so we just check from
@@ -224,7 +225,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         if (tx.from) {
             const _from = tx.from;
             promises.push((async () => {
-                const from = await resolveAddress(_from, this.provider);
+                const from = await resolveAddress(_from, this.provider.chainNamespace, this.provider);
                 assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
                     "from address mismatch", "transaction", _tx);
                 tx.from = from;
@@ -238,7 +239,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         // we look it up for them.
         if (tx.gasLimit == null) {
             promises.push((async () => {
-                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address});
+                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
             })());
         }
 
@@ -246,7 +247,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         if (tx.to != null) {
             const _to = tx.to;
             promises.push((async () => {
-                tx.to = await resolveAddress(_to, this.provider);
+                tx.to = await resolveAddress(_to, this.provider.chainNamespace, this.provider);
             })());
         }
 
@@ -255,7 +256,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
         const hexTx = this.provider.getRpcTransaction(tx);
 
-        return this.provider.send("eth_sendTransaction", [ hexTx ]);
+        return this.provider.send("eth_sendTransaction", [hexTx]);
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
@@ -269,7 +270,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         // for a response, and we need the actual transaction, so we poll
         // for it; it should show up very quickly
         return await (new Promise((resolve, reject) => {
-            const timeouts = [ 1000, 100 ];
+            const timeouts = [1000, 100];
             const checkTx = async () => {
                 // Try getting the transaction
                 const tx = await this.provider.getTransaction(hash);
@@ -290,7 +291,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
         // Make sure the from matches the sender
         if (tx.from) {
-            const from = await resolveAddress(tx.from, this.provider);
+            const from = await resolveAddress(tx.from, this.provider.chainNamespace, this.provider);
             assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
                 "from address mismatch", "transaction", _tx);
             tx.from = from;
@@ -299,14 +300,14 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         }
 
         const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send("eth_signTransaction", [ hexTx ]);
+        return await this.provider.send("eth_signTransaction", [hexTx]);
     }
 
 
     async signMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof(_message) === "string") ? toUtf8Bytes(_message): _message);
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
         return await this.provider.send("personal_sign", [
-            hexlify(message), this.address.toLowerCase() ]);
+            hexlify(message), this.address.toLowerCase()]);
     }
 
     async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, _value: Record<string, any>): Promise<string> {
@@ -314,7 +315,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
         // Populate any ENS names (in-place)
         const populated = await TypedDataEncoder.resolveNames(domain, types, value, async (value: string) => {
-            const address = await resolveAddress(value);
+            const address = await resolveAddress(value, this.provider.chainNamespace);
             assertArgument(address != null, "TypedData does not support null address", "value", value);
             return address;
         });
@@ -327,14 +328,14 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     async unlock(password: string): Promise<boolean> {
         return this.provider.send("personal_unlockAccount", [
-            this.address.toLowerCase(), password, null ]);
+            this.address.toLowerCase(), password, null]);
     }
 
     // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
     async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof(_message) === "string") ? toUtf8Bytes(_message): _message);
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
         return await this.provider.send("eth_sign", [
-            this.address.toLowerCase(), hexlify(message) ]);
+            this.address.toLowerCase(), hexlify(message)]);
     }
 }
 
@@ -375,18 +376,18 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         if (this.#drainTimer) { return; }
 
         // If we aren't using batching, no hard in sending it immeidately
-        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0: this._getOption("batchStallTime");
+        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0 : this._getOption("batchStallTime");
 
         this.#drainTimer = setTimeout(() => {
             this.#drainTimer = null;
 
             const payloads = this.#payloads;
-            this.#payloads = [ ];
+            this.#payloads = [];
 
             while (payloads.length) {
 
                 // Create payload batches that satisfy our batch constraints
-                const batch = [ <Payload>(payloads.shift()) ];
+                const batch = [<Payload>(payloads.shift())];
                 while (payloads.length) {
                     if (batch.length === this.#options.batchMaxCount) { break; }
                     batch.push(<Payload>(payloads.shift()));
@@ -399,7 +400,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
                 // Process the result to each payload
                 (async () => {
-                    const payload = ((batch.length === 1) ? batch[0].payload: batch.map((p) => p.payload));
+                    const payload = ((batch.length === 1) ? batch[0].payload : batch.map((p) => p.payload));
 
                     this.emit("debug", { action: "sendRpcPayload", payload });
 
@@ -421,7 +422,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                             // The response is an error
                             if ("error" in resp) {
                                 return reject(this.getRpcError(payload, resp));
-
                             }
 
                             // All good; send the result
@@ -441,13 +441,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         }, stallTime);
     }
 
-    constructor(network?: Networkish, options?: JsonRpcApiProviderOptions) {
-        super(network);
+    constructor(chainNamespace: ChainNamespace, network?: Networkish, options?: JsonRpcApiProviderOptions) {
+        super(chainNamespace, network);
 
         this.#nextId = 1;
-        this.#options = Object.assign({ }, defaultOptions, options || { });
+        this.#options = Object.assign({}, defaultOptions, options || {});
 
-        this.#payloads = [ ];
+        this.#payloads = [];
         this.#drainTimer = null;
 
         this.#network = null;
@@ -483,7 +483,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  is detected, and if it has changed, the call will reject.
      */
     get _network(): Network {
-        assert (this.#network, "network is not available yet", "NETWORK_ERROR");
+        assert(this.#network, "network is not available yet", "NETWORK_ERROR");
         return this.#network;
     }
 
@@ -512,15 +512,15 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         // Legacy networks do not like the type field being passed along (which
         // is fair), so we delete type if it is 0 and a non-EIP-1559 network
         if (req.method === "call" || req.method === "estimateGas") {
-            let tx = req.transaction;
+            const tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
                     const feeData = await this.getFeeData();
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
-                        req = Object.assign({ }, req, {
-                            transaction: Object.assign({ }, tx, { type: undefined })
+                        req = Object.assign({}, req, {
+                            transaction: Object.assign({}, tx, { type: undefined })
                         });
                     }
                 }
@@ -549,13 +549,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
         // If we are ready, use ``send``, which enabled requests to be batched
         if (this.ready) {
-            return Network.from(getBigInt(await this.send("eth_chainId", [ ])));
+            return Network.from(this.chainNamespace, getBigInt(await this.send("eth_chainId", [])));
         }
 
         // We are not ready yet; use the primitive _send
 
         const payload: JsonRpcPayload = {
-            id: this.#nextId++, method: "eth_chainId", params: [ ], jsonrpc: "2.0"
+            id: this.#nextId++, method: "eth_chainId", params: [], jsonrpc: "2.0"
         };
 
         this.emit("debug", { action: "sendRpcPayload", payload });
@@ -571,7 +571,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         this.emit("debug", { action: "receiveRpcResult", result });
 
         if ("result" in result) {
-            return Network.from(getBigInt(result.result));
+            return Network.from(this.chainNamespace, getBigInt(result.result));
         }
 
         throw this.getRpcError(payload, result);
@@ -663,7 +663,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             if ((<any>tx)[key] == null) { return; }
             let dstKey = key;
             if (key === "gasLimit") { dstKey = "gas"; }
-            (<any>result)[dstKey] = toQuantity(getBigInt((<any>tx)[key], `tx.${ key }`));
+            (<any>result)[dstKey] = toQuantity(getBigInt((<any>tx)[key], `tx.${key}`));
         });
 
         // Make sure addresses and data are lowercase
@@ -687,10 +687,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     getRpcRequest(req: PerformActionRequest): null | { method: string, args: Array<any> } {
         switch (req.method) {
             case "chainId":
-                return { method: "eth_chainId", args: [ ] };
+                return { method: "eth_chainId", args: [] };
 
             case "getBlockNumber":
-                return { method: "eth_blockNumber", args: [ ] };
+                return { method: "eth_blockNumber", args: [] };
 
             case "getGasPrice":
                 return { method: "eth_gasPrice", args: [] };
@@ -698,19 +698,19 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "getBalance":
                 return {
                     method: "eth_getBalance",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
             case "getTransactionCount":
                 return {
                     method: "eth_getTransactionCount",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
             case "getCode":
                 return {
                     method: "eth_getCode",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
             case "getStorage":
@@ -726,19 +726,19 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "broadcastTransaction":
                 return {
                     method: "eth_sendRawTransaction",
-                    args: [ req.signedTransaction ]
+                    args: [req.signedTransaction]
                 };
 
             case "getBlock":
                 if ("blockTag" in req) {
                     return {
                         method: "eth_getBlockByNumber",
-                        args: [ req.blockTag, !!req.includeTransactions ]
+                        args: [req.blockTag, !!req.includeTransactions]
                     };
                 } else if ("blockHash" in req) {
                     return {
                         method: "eth_getBlockByHash",
-                        args: [ req.blockHash, !!req.includeTransactions ]
+                        args: [req.blockHash, !!req.includeTransactions]
                     };
                 }
                 break;
@@ -746,25 +746,25 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "getTransaction":
                 return {
                     method: "eth_getTransactionByHash",
-                    args: [ req.hash ]
+                    args: [req.hash]
                 };
 
             case "getTransactionReceipt":
                 return {
                     method: "eth_getTransactionReceipt",
-                    args: [ req.hash ]
+                    args: [req.hash]
                 };
 
             case "call":
                 return {
                     method: "eth_call",
-                    args: [ this.getRpcTransaction(req.transaction), req.blockTag ]
+                    args: [this.getRpcTransaction(req.transaction), req.blockTag]
                 };
 
             case "estimateGas": {
                 return {
                     method: "eth_estimateGas",
-                    args: [ this.getRpcTransaction(req.transaction) ]
+                    args: [this.getRpcTransaction(req.transaction)]
                 };
             }
 
@@ -776,7 +776,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                         req.filter.address = getLowerCase(req.filter.address);
                     }
                 }
-                return { method: "eth_getLogs", args: [ req.filter ] };
+                return { method: "eth_getLogs", args: [req.filter] };
         }
 
         return null;
@@ -806,9 +806,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             const result = spelunkData(error);
 
             const e = AbiCoder.getBuiltinCallException(
-                (method === "eth_call") ? "call": "estimateGas",
+                this.chainNamespace,
+                (method === "eth_call") ? "call" : "estimateGas",
                 ((<any>payload).params[0]),
-                (result ? result.data: null)
+                (result ? result.data : null)
             );
             e.info = { error, payload };
             return e;
@@ -819,7 +820,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
         const message = JSON.stringify(spelunkMessage(error));
 
-        if (typeof(error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+        if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
             const actionMap: Record<string, "requestAccess" | "sendTransaction" | "signMessage" | "signTransaction" | "signTypedData"> = {
                 eth_sign: "signMessage",
                 personal_sign: "signMessage",
@@ -831,7 +832,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             };
 
             return makeError(`user rejected action`, "ACTION_REJECTED", {
-                action: (actionMap[method] || "unknown") ,
+                action: (actionMap[method] || "unknown"),
                 reason: "rejected",
                 info: { payload, error }
             });
@@ -917,10 +918,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {
         if (address == null) { address = 0; }
 
-        const accountsPromise = this.send("eth_accounts", [ ]);
+        const accountsPromise = this.send("eth_accounts", []);
 
         // Account index
-        if (typeof(address) === "number") {
+        if (typeof (address) === "number") {
             const accounts = <Array<string>>(await accountsPromise);
             if (address >= accounts.length) { throw new Error("no such account"); }
             return new JsonRpcSigner(this, accounts[address]);
@@ -932,9 +933,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         });
 
         // Account address
-        address = getAddress(address);
+        address = getAddress(address, this.chainNamespace);
         for (const account of accounts) {
-            if (getAddress(account) === address) {
+            if (getAddress(account, this.chainNamespace) === address) {
                 return new JsonRpcSigner(this, address);
             }
         }
@@ -943,15 +944,15 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     async listAccounts(): Promise<Array<JsonRpcSigner>> {
-        const accounts: Array<string> = await this.send("eth_accounts", [ ]);
+        const accounts: Array<string> = await this.send("eth_accounts", []);
         return accounts.map((a) => new JsonRpcSigner(this, a));
     }
 }
 
 export abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
     #pollingInterval: number;
-    constructor(network?: Networkish, options?: JsonRpcApiProviderOptions) {
-        super(network, options);
+    constructor(chainNamespace: ChainNamespace, network?: Networkish, options?: JsonRpcApiProviderOptions) {
+        super(chainNamespace, network, options);
 
         this.#pollingInterval = 4000;
     }
@@ -990,11 +991,10 @@ export abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
 export class JsonRpcProvider extends JsonRpcApiPollingProvider {
     #connect: FetchRequest;
 
-    constructor(url?: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
-        if (url == null) { url = "http:/\/localhost:8545"; }
-        super(network, options);
+    constructor(chainNamespace: ChainNamespace, url: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
+        super(chainNamespace, network, options);
 
-        if (typeof(url) === "string") {
+        if (typeof (url) === "string") {
             this.#connect = new FetchRequest(url);
         } else {
             this.#connect = url.clone();
@@ -1024,7 +1024,7 @@ export class JsonRpcProvider extends JsonRpcApiPollingProvider {
         response.assertOk();
 
         let resp = response.bodyJson;
-        if (!Array.isArray(resp)) { resp = [ resp ]; }
+        if (!Array.isArray(resp)) { resp = [resp]; }
 
         return resp;
     }
@@ -1034,12 +1034,12 @@ function spelunkData(value: any): null | { message: string, data: string } {
     if (value == null) { return null; }
 
     // These *are* the droids we're looking for.
-    if (typeof(value.message) === "string" && value.message.match("reverted") && isHexString(value.data)) {
+    if (typeof (value.message) === "string" && value.message.match("reverted") && isHexString(value.data)) {
         return { message: value.message, data: value.data };
     }
 
     // Spelunk further...
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         for (const key in value) {
             const result = spelunkData(value[key]);
             if (result) { return result; }
@@ -1048,10 +1048,10 @@ function spelunkData(value: any): null | { message: string, data: string } {
     }
 
     // Might be a JSON string we can further descend...
-    if (typeof(value) === "string") {
+    if (typeof (value) === "string") {
         try {
             return spelunkData(JSON.parse(value));
-        } catch (error) { }
+        } catch (error) { /* empty */ }
     }
 
     return null;
@@ -1061,27 +1061,27 @@ function _spelunkMessage(value: any, result: Array<string>): void {
     if (value == null) { return; }
 
     // These *are* the droids we're looking for.
-    if (typeof(value.message) === "string") {
+    if (typeof (value.message) === "string") {
         result.push(value.message);
     }
 
     // Spelunk further...
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         for (const key in value) {
             _spelunkMessage(value[key], result);
         }
     }
 
     // Might be a JSON string we can further descend...
-    if (typeof(value) === "string") {
+    if (typeof (value) === "string") {
         try {
             return _spelunkMessage(JSON.parse(value), result);
-        } catch (error) { }
+        } catch (error) { /* empty */ }
     }
 }
 
 function spelunkMessage(value: any): Array<string> {
-    const result: Array<string> = [ ];
+    const result: Array<string> = [];
     _spelunkMessage(value, result);
     return result;
 }

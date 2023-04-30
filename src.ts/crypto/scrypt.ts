@@ -1,8 +1,8 @@
 import { scrypt as _nobleSync, scryptAsync as _nobleAsync } from "@noble/hashes/scrypt";
 
-import { getBytes, hexlify as H } from "../utils/index.js";
+import { getBytes, hexlify as H } from "../utils/index";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
 /**
  *  A callback during long-running operations to update any

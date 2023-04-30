@@ -3,9 +3,9 @@
  *
  *  @_subsection: api/utils:UUID  [about-uuid]
  */
-import { getBytes, hexlify } from "./data.js";
+import { getBytes, hexlify } from "./data";
 
-import type { BytesLike } from "./index.js";
+import type { BytesLike } from "./index";
 
 /**
  *  Returns the version 4 [[link-uuid]] for the %%randomBytes%%.

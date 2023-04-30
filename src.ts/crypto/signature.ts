@@ -1,14 +1,13 @@
-
-import { ZeroHash } from "../constants/index.js";
+import { ZeroHash } from "../constants/index";
 import {
     concat, dataLength, getBigInt, getBytes, getNumber, hexlify,
     toBeArray, isHexString, zeroPadValue,
     assertArgument, assertPrivate
-} from "../utils/index.js";
+} from "../utils/index";
 
 import type {
     BigNumberish, BytesLike
-} from "../utils/index.js";
+} from "../utils/index";
 
 
 // Constants

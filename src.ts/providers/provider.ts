@@ -1,27 +1,26 @@
 //import { resolveAddress } from "@ethersproject/address";
+import type { AddressLike, NameResolver } from "../address/index";
+import type { Signature } from "../crypto/index";
+import { accessListify } from "../transaction/index";
+import type { AccessList, AccessListish, TransactionLike } from "../transaction/index";
 import {
     defineProperties, getBigInt, getNumber, hexlify, resolveProperties,
     assert, assertArgument, isError, makeError
-} from "../utils/index.js";
-import { accessListify } from "../transaction/index.js";
-
-import type { AddressLike, NameResolver } from "../address/index.js";
-import type { BigNumberish, EventEmitterable } from "../utils/index.js";
-import type { Signature } from "../crypto/index.js";
-import type { AccessList, AccessListish, TransactionLike } from "../transaction/index.js";
-
-import type { ContractRunner } from "./contracts.js";
-import type { Network } from "./network.js";
+} from "../utils/index";
+import type { BigNumberish, EventEmitterable } from "../utils/index";
+import { TransactionType } from "../wallet";
+import type { ContractRunner } from "./contracts";
+import {
+    BlockParams, LogParams, TransactionReceiptParams,
+    TransactionResponseParams
+} from "./formatting";
+import type { ChainNamespace, Network } from "./network";
 
 
 const BN_0 = BigInt(0);
 
 export type BlockTag = BigNumberish | string;
 
-import {
-    BlockParams, LogParams, TransactionReceiptParams,
-    TransactionResponseParams
-} from "./formatting.js";
 
 // -----------------------
 
@@ -102,6 +101,8 @@ export class FeeData {
 
 
 export interface TransactionRequest {
+    tronTransactionType?: TransactionType;
+
     type?: null | number;
 
     to?: null | AddressLike;
@@ -158,7 +159,9 @@ export interface PreparedTransactionRequest {
 }
 
 export function copyRequest(req: TransactionRequest): PreparedTransactionRequest {
-    const result: any = { };
+    const result: any = {};
+
+    if (req.tronTransactionType) { result.tronTransactionType = req.tronTransactionType; }
 
     // These could be addresses, ENS names or Addressables
     if (req.to) { result.to = req.to; }
@@ -169,13 +172,13 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
     const bigIntKeys = "chainId,gasLimit,gasPrice,maxFeePerGas,maxPriorityFeePerGas,value".split(/,/);
     for (const key of bigIntKeys) {
         if (!(key in req) || (<any>req)[key] == null) { continue; }
-        result[key] = getBigInt((<any>req)[key], `request.${ key }`);
+        result[key] = getBigInt((<any>req)[key], `request.${key}`);
     }
 
     const numberKeys = "type,nonce".split(/,/);
     for (const key of numberKeys) {
         if (!(key in req) || (<any>req)[key] == null) { continue; }
-        result[key] = getNumber((<any>req)[key], `request.${ key }`);
+        result[key] = getNumber((<any>req)[key], `request.${key}`);
     }
 
     if (req.accessList) {
@@ -307,7 +310,7 @@ export class Block implements BlockParams, Iterable<string> {
     constructor(block: BlockParams, provider: Provider) {
 
         this.#transactions = block.transactions.map((tx) => {
-            if (typeof(tx) !== "string") {
+            if (typeof (tx) !== "string") {
                 return new TransactionResponse(tx, provider);
             }
             return tx;
@@ -340,7 +343,7 @@ export class Block implements BlockParams, Iterable<string> {
      */
     get transactions(): ReadonlyArray<string> {
         return this.#transactions.map((tx) => {
-            if (typeof(tx) === "string") { return tx; }
+            if (typeof (tx) === "string") { return tx; }
             return tx.hash;
         });
     }
@@ -354,10 +357,10 @@ export class Block implements BlockParams, Iterable<string> {
         const txs = this.#transactions.slice();
 
         // Doesn't matter...
-        if (txs.length === 0) { return [ ]; }
+        if (txs.length === 0) { return []; }
 
         // Make sure we prefetched the transactions
-        assert(typeof(txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
+        assert(typeof (txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
             operation: "transactionResponses()"
         });
 
@@ -419,13 +422,13 @@ export class Block implements BlockParams, Iterable<string> {
     async getTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
         // Find the internal value by its index or hash
         let tx: string | TransactionResponse | undefined = undefined;
-        if (typeof(indexOrHash) === "number") {
+        if (typeof (indexOrHash) === "number") {
             tx = this.#transactions[indexOrHash];
 
         } else {
             const hash = indexOrHash.toLowerCase();
             for (const v of this.#transactions) {
-                if (typeof(v) === "string") {
+                if (typeof (v) === "string") {
                     if (v !== hash) { continue; }
                     tx = v;
                     break;
@@ -438,7 +441,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
         if (tx == null) { throw new Error("no such tx"); }
 
-        if (typeof(tx) === "string") {
+        if (typeof (tx) === "string") {
             return <TransactionResponse>(await this.provider.getTransaction(tx));
         } else {
             return tx;
@@ -447,7 +450,7 @@ export class Block implements BlockParams, Iterable<string> {
 
     getPrefetchedTransaction(indexOrHash: number | string): TransactionResponse {
         const txs = this.prefetchedTransactions;
-        if (typeof(indexOrHash) === "number") {
+        if (typeof (indexOrHash) === "number") {
             return txs[indexOrHash];
         }
 
@@ -537,19 +540,19 @@ export class Log implements LogParams {
 
     async getBlock(): Promise<Block> {
         const block = await this.provider.getBlock(this.blockHash);
-        assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", { });
+        assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", {});
         return block;
     }
 
     async getTransaction(): Promise<TransactionResponse> {
         const tx = await this.provider.getTransaction(this.transactionHash);
-        assert(!!tx, "failed to find transaction", "UNKNOWN_ERROR", { });
+        assert(!!tx, "failed to find transaction", "UNKNOWN_ERROR", {});
         return tx;
     }
 
     async getTransactionReceipt(): Promise<TransactionReceipt> {
         const receipt = await this.provider.getTransactionReceipt(this.transactionHash);
-        assert(!!receipt, "failed to find transaction receipt", "UNKNOWN_ERROR", { });
+        assert(!!receipt, "failed to find transaction receipt", "UNKNOWN_ERROR", {});
         return receipt;
     }
 
@@ -857,8 +860,8 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     constructor(tx: TransactionResponseParams, provider: Provider) {
         this.provider = provider;
 
-        this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber: null;
-        this.blockHash = (tx.blockHash != null) ? tx.blockHash: null;
+        this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber : null;
+        this.blockHash = (tx.blockHash != null) ? tx.blockHash : null;
 
         this.hash = tx.hash;
         this.index = tx.index;
@@ -874,13 +877,13 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.value = tx.value;
 
         this.gasPrice = tx.gasPrice;
-        this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas: null;
-        this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas: null;
+        this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas : null;
+        this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas : null;
 
         this.chainId = tx.chainId;
         this.signature = tx.signature;
 
-        this.accessList = (tx.accessList != null) ? tx.accessList: null;
+        this.accessList = (tx.accessList != null) ? tx.accessList : null;
 
         this.#startBlock = -1;
     }
@@ -945,13 +948,13 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  wait until enough confirmations have completed.
      */
     async wait(_confirms?: number, _timeout?: number): Promise<null | TransactionReceipt> {
-        const confirms = (_confirms == null) ? 1: _confirms;
-        const timeout = (_timeout == null) ? 0: _timeout;
+        const confirms = (_confirms == null) ? 1 : _confirms;
+        const timeout = (_timeout == null) ? 0 : _timeout;
 
         let startBlock = this.#startBlock
         let nextScan = -1;
-        let stopScanning = (startBlock === -1) ? true: false;
-        const checkReplacement = async () => {
+        let stopScanning = (startBlock === -1) ? true : false;
+        const checkReplacement = async (): Promise<any> => {
             // Get the current transaction count for this sender
             if (stopScanning) { return null; }
             const { blockNumber, nonce } = await resolveProperties({
@@ -1011,7 +1014,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
                         let reason: "replaced" | "repriced" | "cancelled" = "replaced";
                         if (tx.data === this.data && tx.to === this.to && tx.value === this.value) {
                             reason = "repriced";
-                        } else  if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
+                        } else if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
                             reason = "cancelled"
                         }
 
@@ -1045,7 +1048,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
 
         const waiter = new Promise((resolve, reject) => {
             // List of things to cancel when we have a result (one way or the other)
-            const cancellers: Array<() => void> = [ ];
+            const cancellers: Array<() => void> = [];
             const cancel = () => { cancellers.forEach((c) => c()); };
 
             // On cancel, stop scanning for replacements
@@ -1143,7 +1146,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  This provides a Type Guard that this transaction will have
      *  the ``null``-ness for hardfork-specific properties set correctly.
      */
-    isLondon(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }){
+    isLondon(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }) {
         return (this.type === 2);
     }
 
@@ -1237,15 +1240,17 @@ function createRemovedTransactionFilter(tx: { hash: string, blockHash: string, b
 }
 
 function createRemovedLogFilter(log: { blockHash: string, transactionHash: string, blockNumber: number, address: string, data: string, topics: ReadonlyArray<string>, index: number }): OrphanFilter {
-    return { orphan: "drop-log", log: {
-        transactionHash: log.transactionHash,
-        blockHash: log.blockHash,
-        blockNumber: log.blockNumber,
-        address: log.address,
-        data: log.data,
-        topics: Object.freeze(log.topics.slice()),
-        index: log.index
-    } };
+    return {
+        orphan: "drop-log", log: {
+            transactionHash: log.transactionHash,
+            blockHash: log.blockHash,
+            blockNumber: log.blockNumber,
+            address: log.address,
+            data: log.data,
+            topics: Object.freeze(log.topics.slice()),
+            index: log.index
+        }
+    };
 }
 
 //////////////////////
@@ -1310,6 +1315,8 @@ export type ProviderEvent = string | Array<string | Array<string>> | EventFilter
  *  broadcast.
  */
 export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent>, NameResolver {
+
+    readonly chainNamespace: ChainNamespace
 
     /**
      *  The provider iteself.
@@ -1406,7 +1413,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  memory pool of any node for which the transaction meets the
      *  rebroadcast requirements.
      */
-    broadcastTransaction(signedTx: string): Promise<TransactionResponse>;
+    broadcastTransaction(signedTx: string | object): Promise<TransactionResponse>;
 
 
     ////////////////////

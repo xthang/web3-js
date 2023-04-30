@@ -1,4 +1,4 @@
-import { assertArgument } from "../utils/index.js";
+import { assertArgument } from "../utils/index";
 
 
 const subsChrs = " !#$%&'()*+,-./<=>?@[]^_`{|}~";

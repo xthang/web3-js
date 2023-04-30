@@ -1,8 +1,8 @@
 import { ripemd160 as noble_ripemd160 } from "@noble/hashes/ripemd160";
 
-import { getBytes,  hexlify } from "../utils/index.js";
+import { getBytes,  hexlify } from "../utils/index";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
 
 let locked = false;

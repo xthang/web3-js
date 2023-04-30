@@ -1,15 +1,16 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
 import type {
     TestCaseAccount, TestCaseTypedData, TestCaseTransaction
-} from "./types.js";
+} from "./types";
 
 
-import { hexlify, randomBytes, Wallet } from "../index.js";
+import { hexlify, randomBytes, Wallet } from "../index";
 
-import type { HDNodeWallet } from "../index.js";
+import type { HDNodeWallet } from "../index";
+import { ChainNamespace } from "../providers/network";
 
 
 describe("Test Private Key Wallet", function() {
@@ -97,14 +98,14 @@ describe("Test Wallet Encryption", function() {
         it("encrypts a random wallet: sync", function() {
             this.timeout(30000);
             const json = wallet.encryptSync(password);
-            const decrypted = Wallet.fromEncryptedJsonSync(json, password);
+            const decrypted = Wallet.fromEncryptedJsonSync(json, password, ChainNamespace.eip155);
             assert.equal(decrypted.address, wallet.address, "address");
         });
 
         it("encrypts a random wallet: async", async function() {
             this.timeout(30000);
             const json = await wallet.encrypt(password);
-            const decrypted = await Wallet.fromEncryptedJson(json, password);
+            const decrypted = await Wallet.fromEncryptedJson(json, password, ChainNamespace.eip155);
             assert.equal(decrypted.address, wallet.address, "address");
         });
 

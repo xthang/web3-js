@@ -4,26 +4,23 @@
  *  @_subsection api/abi:Interfaces  [interfaces]
  */
 
-import { keccak256 } from "../crypto/index.js"
-import { id } from "../hash/index.js"
+import { keccak256_hex } from "../crypto/index"
+import { id } from "../hash/index"
+import { ChainNamespace } from "../providers";
 import {
     concat, dataSlice, getBigInt, getBytes, getBytesCopy,
     hexlify, zeroPadValue, isHexString, defineProperties, assertArgument, toBeHex,
     assert
-} from "../utils/index.js";
-
-import { AbiCoder } from "./abi-coder.js";
-import { checkResultErrors, Result } from "./coders/abstract-coder.js";
+} from "../utils/index";
+import type { BigNumberish, BytesLike, CallExceptionError, CallExceptionTransaction } from "../utils/index";
+import { AbiCoder } from "./abi-coder";
+import { checkResultErrors, Result } from "./coders/abstract-coder";
 import {
     ConstructorFragment, ErrorFragment, EventFragment, FallbackFragment,
     Fragment, FunctionFragment, ParamType
-} from "./fragments.js";
-import { Typed } from "./typed.js";
-
-import type { BigNumberish, BytesLike, CallExceptionError, CallExceptionTransaction } from "../utils/index.js";
-
-import type { JsonFragment } from "./fragments.js";
-
+} from "./fragments";
+import type { JsonFragment } from "./fragments";
+import { Typed } from "./typed";
 
 export { checkResultErrors, Result };
 
@@ -111,21 +108,21 @@ const BuiltinErrors: Record<string, ErrorInfo> = {
     "0x08c379a0": {
         signature: "Error(string)",
         name: "Error",
-        inputs: [ "string" ],
+        inputs: ["string"],
         reason: (message: string) => {
-            return `reverted with reason string ${ JSON.stringify(message) }`;
+            return `reverted with reason string ${JSON.stringify(message)}`;
         }
     },
     "0x4e487b71": {
         signature: "Panic(uint256)",
         name: "Panic",
-        inputs: [ "uint256" ],
+        inputs: ["uint256"],
         reason: (code: bigint) => {
             let reason = "unknown panic code";
             if (code >= 0 && code <= 0xff && PanicReasons[code.toString()]) {
                 reason = PanicReasons[code.toString()];
             }
-            return `reverted with panic code 0x${ code.toString(16) } (${ reason })`;
+            return `reverted with panic code 0x${code.toString(16)} (${reason})`;
         }
     }
 }
@@ -167,6 +164,7 @@ export type InterfaceAbi = string | ReadonlyArray<Fragment | JsonFragment | stri
  *  The ABI can be specified by [any supported format](InterfaceAbi).
  */
 export class Interface {
+    readonly chainNamespace: ChainNamespace
 
     /**
      *  All the Contract ABI members (i.e. methods, events, errors, etc).
@@ -191,16 +189,18 @@ export class Interface {
     #errors: Map<string, ErrorFragment>;
     #events: Map<string, EventFragment>;
     #functions: Map<string, FunctionFragment>;
-//    #structs: Map<string, StructFragment>;
+    //    #structs: Map<string, StructFragment>;
 
     #abiCoder: AbiCoder;
 
     /**
      *  Create a new Interface for the %%fragments%%.
      */
-    constructor(fragments: InterfaceAbi) {
-        let abi: ReadonlyArray<Fragment | JsonFragment | string> = [ ];
-        if (typeof(fragments) === "string") {
+    constructor(chainNamespace: ChainNamespace, fragments: InterfaceAbi) {
+        this.chainNamespace = chainNamespace
+
+        let abi: ReadonlyArray<Fragment | JsonFragment | string> = [];
+        if (typeof (fragments) === "string") {
             abi = JSON.parse(fragments);
         } else {
             abi = fragments;
@@ -209,10 +209,10 @@ export class Interface {
         this.#functions = new Map();
         this.#errors = new Map();
         this.#events = new Map();
-//        this.#structs = new Map();
+        //        this.#structs = new Map();
 
 
-        const frags: Array<Fragment> = [ ];
+        const frags: Array<Fragment> = [];
         for (const a of abi) {
             try {
                 frags.push(Fragment.from(a));
@@ -248,7 +248,7 @@ export class Interface {
                         receive = true;
                     } else {
                         assertArgument(!fallback || (<FallbackFragment>fragment).payable !== fallback.payable,
-                            "conflicting fallback fragments", `fragments[${ index }]`, fragment);
+                            "conflicting fallback fragments", `fragments[${index}]`, fragment);
                         fallback = <FallbackFragment>fragment;
                         receive = fallback.payable;
                     }
@@ -296,7 +296,7 @@ export class Interface {
      *  removes parameter names and unneceesary spaces.
      */
     format(minimal?: boolean): Array<string> {
-        const format = (minimal ? "minimal": "full");
+        const format = (minimal ? "minimal" : "full");
         const abi = this.fragments.map((f) => f.format(format));
         return abi;
     }
@@ -317,7 +317,7 @@ export class Interface {
      *  data.
      */
     getAbiCoder(): AbiCoder {
-        return AbiCoder.defaultAbiCoder();
+        return AbiCoder.defaultAbiCoder(this.chainNamespace);
     }
 
     // Find a function definition by any means necessary (unless it is ambiguous)
@@ -334,13 +334,13 @@ export class Interface {
 
         // It is a bare name, look up the function (will return null if ambiguous)
         if (key.indexOf("(") === -1) {
-            const matching: Array<FunctionFragment> = [ ];
-            for (const [ name, fragment ] of this.#functions) {
+            const matching: Array<FunctionFragment> = [];
+            for (const [name, fragment] of this.#functions) {
                 if (name.split("("/* fix:) */)[0] === key) { matching.push(fragment); }
             }
 
             if (values) {
-                const lastValue = (values.length > 0) ? values[values.length - 1]: null;
+                const lastValue = (values.length > 0) ? values[values.length - 1] : null;
 
                 let valueLength = values.length;
                 let allowOptions = true;
@@ -385,7 +385,7 @@ export class Interface {
             // last value is something that cannot possibly be an options
             if (matching.length === 1 && values && values.length !== matching[0].inputs.length) {
                 const lastArg = values[values.length - 1];
-                if (lastArg == null || Array.isArray(lastArg) || typeof(lastArg) !== "object") {
+                if (lastArg == null || Array.isArray(lastArg) || typeof (lastArg) !== "object") {
                     matching.splice(0, 1);
                 }
             }
@@ -394,7 +394,7 @@ export class Interface {
 
             if (matching.length > 1 && forceUnique) {
                 const matchStr = matching.map((m) => JSON.stringify(m.format())).join(", ");
-                assertArgument(false, `ambiguous function description (i.e. matches ${ matchStr })`, "key", key);
+                assertArgument(false, `ambiguous function description (i.e. matches ${matchStr})`, "key", key);
             }
 
             return matching[0];
@@ -469,8 +469,8 @@ export class Interface {
 
         // It is a bare name, look up the function (will return null if ambiguous)
         if (key.indexOf("(") === -1) {
-            const matching = [ ];
-            for (const [ name, fragment ] of this.#events) {
+            const matching: EventFragment[] = [];
+            for (const [name, fragment] of this.#events) {
                 if (name.split("("/* fix:) */)[0] === key) { matching.push(fragment); }
             }
 
@@ -502,7 +502,7 @@ export class Interface {
 
             if (matching.length > 1 && forceUnique) {
                 const matchStr = matching.map((m) => JSON.stringify(m.format())).join(", ");
-                assertArgument(false, `ambiguous event description (i.e. matches ${ matchStr })`, "key", key);
+                assertArgument(false, `ambiguous event description (i.e. matches ${matchStr})`, "key", key);
             }
 
             return matching[0];
@@ -590,8 +590,8 @@ export class Interface {
 
         // It is a bare name, look up the function (will return null if ambiguous)
         if (key.indexOf("(") === -1) {
-            const matching = [ ];
-            for (const [ name, fragment ] of this.#errors) {
+            const matching: ErrorFragment[] = [];
+            for (const [name, fragment] of this.#errors) {
                 if (name.split("("/* fix:) */)[0] === key) { matching.push(fragment); }
             }
 
@@ -601,7 +601,7 @@ export class Interface {
                 return null;
             } else if (matching.length > 1) {
                 const matchStr = matching.map((m) => JSON.stringify(m.format())).join(", ");
-                assertArgument(false, `ambiguous error description (i.e. ${ matchStr })`, "name", key);
+                assertArgument(false, `ambiguous error description (i.e. ${matchStr})`, "name", key);
             }
 
             return matching[0];
@@ -631,7 +631,7 @@ export class Interface {
     }
 
     // Get the 4-byte selector used by Solidity to identify a function
-        /*
+    /*
     getSelector(fragment: ErrorFragment | FunctionFragment): string {
         if (typeof(fragment) === "string") {
             const matches: Array<Fragment> = [ ];
@@ -650,7 +650,7 @@ export class Interface {
 
         return dataSlice(id(fragment.format()), 0, 4);
     }
-        */
+    */
 
     // Get the 32-byte topic hash used by Solidity to identify an event
     /*
@@ -674,7 +674,7 @@ export class Interface {
      *  the %%values%% as the constructor arguments.
      */
     encodeDeploy(values?: ReadonlyArray<any>): string {
-        return this._encodeParams(this.deploy.inputs, values || [ ]);
+        return this._encodeParams(this.deploy.inputs, values || []);
     }
 
     /**
@@ -687,14 +687,14 @@ export class Interface {
      *  corresponding error.
      */
     decodeErrorResult(fragment: ErrorFragment | string, data: BytesLike): Result {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getError(fragment);
             assertArgument(f, "unknown error", "fragment", fragment);
             fragment = f;
         }
 
         assertArgument(dataSlice(data, 0, 4) === fragment.selector,
-            `data signature does not match error ${ fragment.name }.`, "data", data);
+            `data signature does not match error ${fragment.name}.`, "data", data);
 
         return this._decodeParams(fragment.inputs, dataSlice(data, 4));
     }
@@ -708,7 +708,7 @@ export class Interface {
      *  a result from a Contract.
      */
     encodeErrorResult(fragment: ErrorFragment | string, values?: ReadonlyArray<any>): string {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getError(fragment);
             assertArgument(f, "unknown error", "fragment", fragment);
             fragment = f;
@@ -716,7 +716,7 @@ export class Interface {
 
         return concat([
             fragment.selector,
-            this._encodeParams(fragment.inputs, values || [ ])
+            this._encodeParams(fragment.inputs, values || [])
         ]);
     }
 
@@ -729,14 +729,14 @@ export class Interface {
      *  instead, which will automatically detect the fragment.
      */
     decodeFunctionData(fragment: FunctionFragment | string, data: BytesLike): Result {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getFunction(fragment);
             assertArgument(f, "unknown function", "fragment", fragment);
             fragment = f;
         }
 
         assertArgument(dataSlice(data, 0, 4) === fragment.selector,
-            `data signature does not match function ${ fragment.name }.`, "data", data);
+            `data signature does not match function ${fragment.name}.`, "data", data);
 
         return this._decodeParams(fragment.inputs, dataSlice(data, 4));
     }
@@ -747,7 +747,7 @@ export class Interface {
      *  the %%values%%.
      */
     encodeFunctionData(fragment: FunctionFragment | string, values?: ReadonlyArray<any>): string {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getFunction(fragment);
             assertArgument(f, "unknown function", "fragment", fragment);
             fragment = f;
@@ -755,7 +755,7 @@ export class Interface {
 
         return concat([
             fragment.selector,
-            this._encodeParams(fragment.inputs, values || [ ])
+            this._encodeParams(fragment.inputs, values || [])
         ]);
     }
 
@@ -769,7 +769,7 @@ export class Interface {
      *  corresponding error.
      */
     decodeFunctionResult(fragment: FunctionFragment | string, data: BytesLike): Result {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getFunction(fragment);
             assertArgument(f, "unknown function", "fragment", fragment);
             fragment = f;
@@ -782,7 +782,7 @@ export class Interface {
             try {
                 return this.#abiCoder.decode(fragment.outputs, bytes);
             } catch (error) {
-                message = "could not decode result data";
+                message = `could not decode result data [length: ${bytes.length}]: ${error}`
             }
         }
 
@@ -796,7 +796,7 @@ export class Interface {
     makeError(_data: BytesLike, tx: CallExceptionTransaction): CallExceptionError {
         const data = getBytes(_data, "data");
 
-        const error = AbiCoder.getBuiltinCallException("call", tx, data);
+        const error = AbiCoder.getBuiltinCallException(this.chainNamespace, "call", tx, data);
 
         // Not a built-in error; try finding a custom error
         const customPrefix = "execution reverted (unknown custom error)";
@@ -811,8 +811,8 @@ export class Interface {
                         name: ef.name, signature: ef.format(), args
                     };
                     error.reason = error.revert.signature;
-                    error.message = `execution reverted: ${ error.reason }`
-                 } catch (e) {
+                    error.message = `execution reverted: ${error.reason}`
+                } catch (e) {
                     error.message = `execution reverted (coult not decode custom error)`
                 }
             }
@@ -840,52 +840,52 @@ export class Interface {
      *  a result from a Contract.
      */
     encodeFunctionResult(fragment: FunctionFragment | string, values?: ReadonlyArray<any>): string {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getFunction(fragment);
             assertArgument(f, "unknown function", "fragment", fragment);
             fragment = f;
         }
-        return hexlify(this.#abiCoder.encode(fragment.outputs, values || [ ]));
+        return hexlify(this.#abiCoder.encode(fragment.outputs, values || []));
     }
-/*
-    spelunk(inputs: Array<ParamType>, values: ReadonlyArray<any>, processfunc: (type: string, value: any) => Promise<any>): Promise<Array<any>> {
-        const promises: Array<Promise<>> = [ ];
-        const process = function(type: ParamType, value: any): any {
-            if (type.baseType === "array") {
-                return descend(type.child
-            }
-            if (type. === "address") {
-            }
-        };
-
-        const descend = function (inputs: Array<ParamType>, values: ReadonlyArray<any>) {
-            if (inputs.length !== values.length) { throw new Error("length mismatch"); }
-            
-        };
-
-        const result: Array<any> = [ ];
-        values.forEach((value, index) => {
-            if (value == null) {
-                topics.push(null);
-            } else if (param.baseType === "array" || param.baseType === "tuple") {
-                logger.throwArgumentError("filtering with tuples or arrays not supported", ("contract." + param.name), value);
-            } else if (Array.isArray(value)) {
-                topics.push(value.map((value) => encodeTopic(param, value)));
-            } else {
-                topics.push(encodeTopic(param, value));
-            }
-        });
-    }
-*/
+    /*
+        spelunk(inputs: Array<ParamType>, values: ReadonlyArray<any>, processfunc: (type: string, value: any) => Promise<any>): Promise<Array<any>> {
+            const promises: Array<Promise<>> = [ ];
+            const process = function(type: ParamType, value: any): any {
+                if (type.baseType === "array") {
+                    return descend(type.child
+                }
+                if (type. === "address") {
+                }
+            };
+    
+            const descend = function (inputs: Array<ParamType>, values: ReadonlyArray<any>) {
+                if (inputs.length !== values.length) { throw new Error("length mismatch"); }
+                
+            };
+    
+            const result: Array<any> = [ ];
+            values.forEach((value, index) => {
+                if (value == null) {
+                    topics.push(null);
+                } else if (param.baseType === "array" || param.baseType === "tuple") {
+                    logger.throwArgumentError("filtering with tuples or arrays not supported", ("contract." + param.name), value);
+                } else if (Array.isArray(value)) {
+                    topics.push(value.map((value) => encodeTopic(param, value)));
+                } else {
+                    topics.push(encodeTopic(param, value));
+                }
+            });
+        }
+    */
     // Create the filter for the event with search criteria (e.g. for eth_filterLog)
     encodeFilterTopics(fragment: EventFragment | string, values: ReadonlyArray<any>): Array<null | string | Array<string>> {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getEvent(fragment);
             assertArgument(f, "unknown event", "eventFragment", fragment);
             fragment = f;
         }
 
-        assert(values.length <= fragment.inputs.length, `too many arguments for ${ fragment.format() }`,
+        assert(values.length <= fragment.inputs.length, `too many arguments for ${fragment.format()}`,
             "UNEXPECTED_ARGUMENT", { count: values.length, expectedCount: fragment.inputs.length })
 
         const topics: Array<null | string | Array<string>> = [];
@@ -894,13 +894,13 @@ export class Interface {
         // @TODO: Use the coders for this; to properly support tuples, etc.
         const encodeTopic = (param: ParamType, value: any): string => {
             if (param.type === "string") {
-                 return id(value);
+                return id(value);
             } else if (param.type === "bytes") {
-                 return keccak256(hexlify(value));
+                return keccak256_hex(hexlify(value));
             }
 
-            if (param.type === "bool" && typeof(value) === "boolean") {
-                value = (value ? "0x01": "0x00");
+            if (param.type === "bool" && typeof (value) === "boolean") {
+                value = (value ? "0x01" : "0x00");
             }
 
             if (param.type.match(/^u?int/)) {
@@ -908,7 +908,7 @@ export class Interface {
             }
 
             // Check addresses are valid
-            if (param.type === "address") { this.#abiCoder.encode( [ "address" ], [ value ]); }
+            if (param.type === "address") { this.#abiCoder.encode(["address"], [value]); }
             return zeroPadValue(hexlify(value), 32);
             //@TOOD should probably be return toHex(value, 32)
         };
@@ -943,16 +943,16 @@ export class Interface {
     }
 
     encodeEventLog(fragment: EventFragment | string, values: ReadonlyArray<any>): { data: string, topics: Array<string> } {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getEvent(fragment);
             assertArgument(f, "unknown event", "eventFragment", fragment);
             fragment = f;
         }
 
-        const topics: Array<string> = [ ];
+        const topics: Array<string> = [];
 
-        const dataTypes: Array<ParamType> = [ ];
-        const dataValues: Array<string> = [ ];
+        const dataTypes: Array<ParamType> = [];
+        const dataValues: Array<string> = [];
 
         if (!fragment.anonymous) {
             topics.push(fragment.topicHash);
@@ -967,12 +967,12 @@ export class Interface {
                 if (param.type === "string") {
                     topics.push(id(value))
                 } else if (param.type === "bytes") {
-                    topics.push(keccak256(value))
+                    topics.push(keccak256_hex(value))
                 } else if (param.baseType === "tuple" || param.baseType === "array") {
                     // @TODO
                     throw new Error("not implemented");
                 } else {
-                    topics.push(this.#abiCoder.encode([ param.type] , [ value ]));
+                    topics.push(this.#abiCoder.encode([param.type], [value]));
                 }
             } else {
                 dataTypes.push(param);
@@ -981,14 +981,14 @@ export class Interface {
         });
 
         return {
-            data: this.#abiCoder.encode(dataTypes , dataValues),
-            topics: topics
+            data: this.#abiCoder.encode(dataTypes, dataValues),
+            topics
         };
     }
 
     // Decode a filter for the event and the search criteria
     decodeEventLog(fragment: EventFragment | string, data: BytesLike, topics?: ReadonlyArray<string>): Result {
-        if (typeof(fragment) === "string") {
+        if (typeof (fragment) === "string") {
             const f = this.getEvent(fragment);
             assertArgument(f, "unknown event", "eventFragment", fragment);
             fragment = f;
@@ -1020,15 +1020,15 @@ export class Interface {
             }
         });
 
-        const resultIndexed = (topics != null) ? this.#abiCoder.decode(indexed, concat(topics)): null;
+        const resultIndexed = (topics != null) ? this.#abiCoder.decode(indexed, concat(topics)) : null;
         const resultNonIndexed = this.#abiCoder.decode(nonIndexed, data, true);
 
         //const result: (Array<any> & { [ key: string ]: any }) = [ ];
-        const values: Array<any> = [ ];
-        const keys: Array<null | string> = [ ];
+        const values: Array<any> = [];
+        const keys: Array<null | string> = [];
         let nonIndexedIndex = 0, indexedIndex = 0;
         fragment.inputs.forEach((param, index) => {
-            let value = null;
+            let value: Indexed | null = null;
             if (param.indexed) {
                 if (resultIndexed == null) {
                     value = new Indexed(null);
@@ -1064,9 +1064,9 @@ export class Interface {
      *
      *  If the matching function cannot be found, return null.
      */
-    parseTransaction(tx: { data: string, value?: BigNumberish }): null | TransactionDescription {
-        const data = getBytes(tx.data, "tx.data");
-        const value = getBigInt((tx.value != null) ? tx.value: 0, "tx.value");
+    parseTransaction(tx: { data?: string, value?: BigNumberish }): null | TransactionDescription {
+        const data = getBytes(tx.data ?? '0x', "tx.data");
+        const value = getBigInt((tx.value != null) ? tx.value : 0, "tx.value");
 
         const fragment = this.getFunction(hexlify(data.slice(0, 4)));
 
@@ -1086,7 +1086,7 @@ export class Interface {
      *
      *  If the matching event cannot be found, returns null.
      */
-    parseLog(log: { topics: Array<string>, data: string}): null | LogDescription {
+    parseLog(log: { topics: Array<string>, data: string }): null | LogDescription {
         const fragment = this.getEvent(log.topics[0]);
 
         if (!fragment || fragment.anonymous) { return null; }
@@ -1096,7 +1096,7 @@ export class Interface {
         //        not mean we have the full ABI; maybe just a fragment?
 
 
-       return new LogDescription(fragment, fragment.topicHash, this.decodeEventLog(fragment, log.data, log.topics));
+        return new LogDescription(fragment, fragment.topicHash, this.decodeEventLog(fragment, log.data, log.topics));
     }
 
     /**
@@ -1122,19 +1122,19 @@ export class Interface {
      *  The %%value%% may be provided as an existing [[Interface]] object,
      *  a JSON-encoded ABI or any Human-Readable ABI format.
      */
-    static from(value: InterfaceAbi | Interface): Interface {
+    static from(chainNamespace: ChainNamespace, value: InterfaceAbi | Interface): Interface {
         // Already an Interface, which is immutable
         if (value instanceof Interface) { return value; }
 
         // JSON
-        if (typeof(value) === "string") { return new Interface(JSON.parse(value)); }
+        if (typeof (value) === "string") { return new Interface(chainNamespace, JSON.parse(value)); }
 
         // Maybe an interface from an older version, or from a symlinked copy
-        if (typeof((<any>value).format) === "function") {
-            return new Interface((<any>value).format("json"));
+        if (typeof ((<any>value).format) === "function") {
+            return new Interface(chainNamespace, (<any>value).format("json"));
         }
 
         // Array of fragments
-        return new Interface(value);
+        return new Interface(chainNamespace, value);
     }
 }

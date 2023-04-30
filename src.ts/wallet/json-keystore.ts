@@ -11,19 +11,15 @@
 
 import { CTR } from "aes-js";
 
-import { getAddress } from "../address/index.js";
-import { keccak256, pbkdf2, randomBytes, scrypt, scryptSync } from "../crypto/index.js";
-import { computeAddress } from "../transaction/index.js";
-import {
-    concat, getBytes, hexlify, uuidV4, assert, assertArgument
-} from "../utils/index.js";
-
-import { getPassword, spelunk, zpad } from "./utils.js";
-
-import type { ProgressCallback } from "../crypto/index.js";
-import type { BytesLike } from "../utils/index.js";
-
-import { version } from "../_version.js";
+import { version } from "../_version";
+import { convertToHexAddress } from "../address/index";
+import { keccak256_hex, pbkdf2, randomBytes, scrypt, scryptSync } from "../crypto/index";
+import type { ProgressCallback } from "../crypto/index";
+import { ChainNamespace } from "../providers/network";
+import { computeAddress } from "../transaction/index";
+import { concat, getBytes, hexlify, uuidV4, assert, assertArgument } from "../utils/index";
+import type { BytesLike } from "../utils/index";
+import { getPassword, spelunk, zpad } from "./utils";
 
 
 const defaultPath = "m/44'/60'/0'/0/0";
@@ -45,17 +41,17 @@ export type KeystoreAccount = {
  *  The parameters to use when encrypting a JSON Keystore Wallet.
  */
 export type EncryptOptions = {
-   progressCallback?: ProgressCallback;
-   iv?: BytesLike;
-   entropy?: BytesLike;
-   client?: string;
-   salt?: BytesLike;
-   uuid?: string;
-   scrypt?: {
-       N?: number;
-       r?: number;
-       p?: number;
-   }
+    progressCallback?: ProgressCallback;
+    iv?: BytesLike;
+    entropy?: BytesLike;
+    client?: string;
+    salt?: BytesLike;
+    uuid?: string;
+    scrypt?: {
+        N?: number;
+        r?: number;
+        p?: number;
+    }
 }
 
 /**
@@ -64,9 +60,9 @@ export type EncryptOptions = {
 export function isKeystoreJson(json: string): boolean {
     try {
         const data = JSON.parse(json);
-        const version = ((data.version != null) ? parseInt(data.version): 0);
+        const version = ((data.version != null) ? parseInt(data.version) : 0);
         if (version === 3) { return true; }
-    } catch (error) { }
+    } catch (error) { /* empty */ }
     return false;
 }
 
@@ -83,22 +79,22 @@ function decrypt(data: any, key: Uint8Array, ciphertext: Uint8Array): string {
     });
 }
 
-function getAccount(data: any, _key: string): KeystoreAccount {
+function getAccount(data: any, _key: string, chainNamespace: ChainNamespace): KeystoreAccount {
     const key = getBytes(_key);
     const ciphertext = spelunk<Uint8Array>(data, "crypto.ciphertext:data!");
 
-    const computedMAC = hexlify(keccak256(concat([ key.slice(16, 32), ciphertext ]))).substring(2);
+    const computedMAC = hexlify(keccak256_hex(concat([key.slice(16, 32), ciphertext]))).substring(2);
     assertArgument(computedMAC === spelunk<string>(data, "crypto.mac:string!").toLowerCase(),
         "incorrect password", "password", "[ REDACTED ]");
 
     const privateKey = decrypt(data, key.slice(0, 16), ciphertext);
 
-    const address = computeAddress(privateKey);
+    const address = computeAddress(privateKey, chainNamespace);
     if (data.address) {
         let check = data.address.toLowerCase();
         if (!check.startsWith("0x")) { check = "0x" + check; }
 
-        assertArgument(getAddress(check) === address, "keystore address/privateKey mismatch", "address", data.address);
+        assertArgument(convertToHexAddress(check, chainNamespace) === address, "keystore address/privateKey mismatch", "address", data.address);
     }
 
     const account: KeystoreAccount = { address, privateKey };
@@ -142,7 +138,7 @@ type KdfParams = ScryptParams | {
 
 function getDecryptKdfParams<T>(data: any): KdfParams {
     const kdf = spelunk(data, "crypto.kdf:string");
-    if (kdf && typeof(kdf) === "string") {
+    if (kdf && typeof (kdf) === "string") {
         if (kdf.toLowerCase() === "scrypt") {
             const salt = spelunk<Uint8Array>(data, "crypto.kdfparams.salt:data!");
             const N = spelunk<number>(data, "crypto.kdfparams.n:int!");
@@ -191,7 +187,7 @@ function getDecryptKdfParams<T>(data: any): KdfParams {
  *  is complete, which can take quite some time, depending on the wallet
  *  paramters and platform.
  */
-export function decryptKeystoreJsonSync(json: string, _password: string | Uint8Array): KeystoreAccount {
+export function decryptKeystoreJsonSync(json: string, _password: string | Uint8Array, chainNamespace: ChainNamespace): KeystoreAccount {
     const data = JSON.parse(json);
 
     const password = getPassword(_password);
@@ -200,14 +196,14 @@ export function decryptKeystoreJsonSync(json: string, _password: string | Uint8A
     if (params.name === "pbkdf2") {
         const { salt, count, dkLen, algorithm } = params;
         const key = pbkdf2(password, salt, count, dkLen, algorithm);
-        return getAccount(data, key);
+        return getAccount(data, key, chainNamespace);
     }
 
     assert(params.name === "scrypt", "cannot be reached", "UNKNOWN_ERROR", { params })
 
     const { salt, N, r, p, dkLen } = params;
     const key = scryptSync(password, salt, N, r, p, dkLen);
-    return getAccount(data, key);
+    return getAccount(data, key, chainNamespace);
 }
 
 function stall(duration: number): Promise<void> {
@@ -225,7 +221,7 @@ function stall(duration: number): Promise<void> {
  *  The %%progressCallback%% will **always** receive ``0`` before
  *  decryption begins and ``1`` when complete.
  */
-export async function decryptKeystoreJson(json: string, _password: string | Uint8Array, progress?: ProgressCallback): Promise<KeystoreAccount> {
+export async function decryptKeystoreJson(json: string, _password: string | Uint8Array, chainNamespace: ChainNamespace, progress?: ProgressCallback): Promise<KeystoreAccount> {
     const data = JSON.parse(json);
 
     const password = getPassword(_password);
@@ -242,19 +238,19 @@ export async function decryptKeystoreJson(json: string, _password: string | Uint
             progress(1);
             await stall(0);
         }
-        return getAccount(data, key);
+        return getAccount(data, key, chainNamespace);
     }
 
     assert(params.name === "scrypt", "cannot be reached", "UNKNOWN_ERROR", { params })
 
     const { salt, N, r, p, dkLen } = params;
     const key = await scrypt(password, salt, N, r, p, dkLen, progress);
-    return getAccount(data, key);
+    return getAccount(data, key, chainNamespace);
 }
 
 function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
     // Check/generate the salt
-    const salt = (options.salt != null) ? getBytes(options.salt, "options.salt"): randomBytes(32);
+    const salt = (options.salt != null) ? getBytes(options.salt, "options.salt") : randomBytes(32);
 
     // Override the scrypt password-based key derivation function parameters
     let N = (1 << 17), r = 8, p = 1;
@@ -263,9 +259,9 @@ function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
         if (options.scrypt.r) { r = options.scrypt.r; }
         if (options.scrypt.p) { p = options.scrypt.p; }
     }
-    assertArgument(typeof(N) === "number" && N > 0 && Number.isSafeInteger(N) && (BigInt(N) & BigInt(N - 1)) === BigInt(0), "invalid scrypt N parameter", "options.N", N);
-    assertArgument(typeof(r) === "number" && r > 0 && Number.isSafeInteger(r), "invalid scrypt r parameter", "options.r", r);
-    assertArgument(typeof(p) === "number" && p > 0 && Number.isSafeInteger(p), "invalid scrypt p parameter", "options.p", p);
+    assertArgument(typeof (N) === "number" && N > 0 && Number.isSafeInteger(N) && (BigInt(N) & BigInt(N - 1)) === BigInt(0), "invalid scrypt N parameter", "options.N", N);
+    assertArgument(typeof (r) === "number" && r > 0 && Number.isSafeInteger(r), "invalid scrypt r parameter", "options.r", r);
+    assertArgument(typeof (p) === "number" && p > 0 && Number.isSafeInteger(p), "invalid scrypt p parameter", "options.p", p);
 
     return { name: "scrypt", dkLen: 32, salt, N, r, p };
 }
@@ -275,11 +271,11 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
     const privateKey = getBytes(account.privateKey, "privateKey");
 
     // Override initialization vector
-    const iv = (options.iv != null) ? getBytes(options.iv, "options.iv"): randomBytes(16);
+    const iv = (options.iv != null) ? getBytes(options.iv, "options.iv") : randomBytes(16);
     assertArgument(iv.length === 16, "invalid options.iv length", "options.iv", options.iv);
 
     // Override the uuid
-    const uuidRandom = (options.uuid != null) ? getBytes(options.uuid, "options.uuid"): randomBytes(16);
+    const uuidRandom = (options.uuid != null) ? getBytes(options.uuid, "options.uuid") : randomBytes(16);
     assertArgument(uuidRandom.length === 16, "invalid options.uuid length", "options.uuid", options.iv);
 
     // This will be used to encrypt the wallet (as per Web3 secret storage)
@@ -293,7 +289,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
     const ciphertext = getBytes(aesCtr.encrypt(privateKey));
 
     // Compute the message authentication code, used to check the password
-    const mac = keccak256(concat([ macPrefix, ciphertext ]))
+    const mac = keccak256_hex(concat([macPrefix, ciphertext]))
 
     // See: https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition
     const data: { [key: string]: any } = {
@@ -320,7 +316,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
 
     // If we have a mnemonic, encrypt it into the JSON wallet
     if (account.mnemonic) {
-        const client = (options.client != null) ? options.client: `ethers/${ version }`;
+        const client = (options.client != null) ? options.client : `ethers/${version}`;
 
         const path = account.mnemonic.path || defaultPath;
         const locale = account.mnemonic.locale || "en";
@@ -334,11 +330,11 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
 
         const now = new Date();
         const timestamp = (now.getUTCFullYear() + "-" +
-                           zpad(now.getUTCMonth() + 1, 2) + "-" +
-                           zpad(now.getUTCDate(), 2) + "T" +
-                           zpad(now.getUTCHours(), 2) + "-" +
-                           zpad(now.getUTCMinutes(), 2) + "-" +
-                           zpad(now.getUTCSeconds(), 2) + ".0Z");
+            zpad(now.getUTCMonth() + 1, 2) + "-" +
+            zpad(now.getUTCDate(), 2) + "T" +
+            zpad(now.getUTCHours(), 2) + "-" +
+            zpad(now.getUTCMinutes(), 2) + "-" +
+            zpad(now.getUTCSeconds(), 2) + ".0Z");
         const gethFilename = ("UTC--" + timestamp + "--" + data.address);
 
         data["x-ethers"] = {
@@ -361,7 +357,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
  *  used. Any provided [[ProgressCallback]] is ignord.
  */
 export function encryptKeystoreJsonSync(account: KeystoreAccount, password: string | Uint8Array, options?: EncryptOptions): string {
-    if (options == null) { options = { }; }
+    if (options == null) { options = {}; }
 
     const passwordBytes = getPassword(password);
     const kdf = getEncryptKdfParams(options);
@@ -379,7 +375,7 @@ export function encryptKeystoreJsonSync(account: KeystoreAccount, password: stri
  *  on the completion status..
  */
 export async function encryptKeystoreJson(account: KeystoreAccount, password: string | Uint8Array, options?: EncryptOptions): Promise<string> {
-    if (options == null) { options = { }; }
+    if (options == null) { options = {}; }
 
     const passwordBytes = getPassword(password);
     const kdf = getEncryptKdfParams(options);

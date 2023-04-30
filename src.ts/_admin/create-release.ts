@@ -1,9 +1,8 @@
-import { getChanges } from "./utils/changelog.js";
-import { getDateTime } from "./utils/date.js";
-import { resolve } from "./utils/path.js";
-import { run } from "./utils/run.js";
-import { getVersions } from "./utils/npm.js";
-
+import { getChanges } from "./utils/changelog";
+import { getDateTime } from "./utils/date";
+import { getVersions } from "./utils/npm";
+import { resolve } from "./utils/path";
+import { run } from "./utils/run";
 
 const version = process.argv[2] || null;
 

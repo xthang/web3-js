@@ -1,19 +1,17 @@
 /**
  *  @_ignore
  */
-import { getAddress, getCreateAddress } from "../address/index.js";
-import { Signature } from "../crypto/index.js"
-import { accessListify } from "../transaction/index.js";
+import { formatHexAddress, getCreateAddress } from "../address/index";
+import { Signature } from "../crypto/index"
+import { accessListify } from "../transaction/index";
 import {
     getBigInt, getNumber, hexlify, isHexString, zeroPadValue,
     assert, assertArgument
-} from "../utils/index.js";
-
+} from "../utils/index";
 import type {
     BlockParams, LogParams,
     TransactionReceiptParams, TransactionResponseParams,
-} from "./formatting.js";
-
+} from "./formatting";
 
 const BN_0 = BigInt(0);
 
@@ -90,7 +88,7 @@ export function formatUint256(value: any): string {
 }
 
 const _formatLog = object({
-    address: getAddress,
+    address: formatHexAddress,
     blockHash: formatHash,
     blockNumber: getNumber,
     data: formatData,
@@ -119,7 +117,7 @@ const _formatBlock = object({
     gasLimit: getBigInt,
     gasUsed: getBigInt,
 
-    miner: allowNull(getAddress),
+    miner: allowNull(formatHexAddress),
     extraData: formatData,
 
     baseFeePerGas: allowNull(getBigInt)
@@ -138,7 +136,7 @@ const _formatReceiptLog = object({
     transactionIndex: getNumber,
     blockNumber: getNumber,
     transactionHash: formatHash,
-    address: getAddress,
+    address: formatHexAddress,
     topics: arrayOf(formatHash),
     data: formatData,
     index: getNumber,
@@ -152,9 +150,9 @@ export function formatReceiptLog(value: any): LogParams {
 }
 
 const _formatTransactionReceipt = object({
-    to: allowNull(getAddress, null),
-    from: allowNull(getAddress, null),
-    contractAddress: allowNull(getAddress, null),
+    to: allowNull(formatHexAddress, null),
+    from: allowNull(formatHexAddress, null),
+    contractAddress: allowNull(formatHexAddress, null),
     // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
     index: getNumber,
     root: allowNull(hexlify),
@@ -202,7 +200,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
         //confirmations: allowNull(getNumber, null),
 
-        from: getAddress,
+        from: formatHexAddress,
 
         // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
         gasPrice: allowNull(getBigInt),
@@ -210,12 +208,12 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
         maxFeePerGas: allowNull(getBigInt),
 
         gasLimit: getBigInt,
-        to: allowNull(getAddress, null),
+        to: allowNull(formatHexAddress, null),
         value: getBigInt,
         nonce: getNumber,
         data: formatData,
 
-        creates: allowNull(getAddress, null),
+        creates: allowNull(formatHexAddress, null),
 
         chainId: allowNull(getBigInt, null)
     }, {

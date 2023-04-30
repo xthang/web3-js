@@ -1,18 +1,17 @@
 
-import { getAddress } from "../address/index.js";
-import { keccak256, Signature, SigningKey } from "../crypto/index.js";
+import { formatHexAddress, getAddress } from "../address/index";
+import { keccak256_hex, Signature, SigningKey } from "../crypto/index";
+import type { SignatureLike } from "../crypto/index";
+import { ChainNamespace } from "../providers/network";
 import {
     concat, decodeRlp, encodeRlp, getBytes, getBigInt, getNumber, hexlify,
     assert, assertArgument, toBeArray, zeroPadValue
-} from "../utils/index.js";
-
-import { accessListify } from "./accesslist.js";
-import { recoverAddress } from "./address.js";
-
-import type { BigNumberish, BytesLike } from "../utils/index.js";
-import type { SignatureLike } from "../crypto/index.js";
-
-import type { AccessList, AccessListish } from "./index.js";
+} from "../utils/index";
+import type { BigNumberish, BytesLike } from "../utils/index";
+import { TransactionType } from "../wallet";
+import { accessListify } from "./accesslist";
+import { recoverAddress } from "./address";
+import type { AccessList, AccessListish } from "./index";
 
 
 const BN_0 = BigInt(0);
@@ -23,6 +22,8 @@ const BN_35 = BigInt(35);
 const BN_MAX_UINT = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
 export interface TransactionLike<A = string> {
+    tronTransactionType?: TransactionType
+
     /**
      *  The type.
      */
@@ -92,11 +93,13 @@ export interface TransactionLike<A = string> {
      *  The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
+
+    customData?: any
 }
 
 function handleAddress(value: string): null | string {
     if (value === "0x") { return null; }
-    return getAddress(value);
+    return formatHexAddress(value);
 }
 
 function handleAccessList(value: any, param: string): AccessList {
@@ -122,12 +125,12 @@ function handleUint(_value: string, param: string): bigint {
 function formatNumber(_value: BigNumberish, name: string): Uint8Array {
     const value = getBigInt(_value, "value");
     const result = toBeArray(value);
-    assertArgument(result.length <= 32, `value too large`, `tx.${ name }`, value);
+    assertArgument(result.length <= 32, `value too large`, `tx.${name}`, value);
     return result;
 }
 
-function formatAccessList(value: AccessListish): Array<[ string, Array<string> ]> {
-    return accessListify(value).map((set) => [ set.address, set.storageKeys ]);
+function formatAccessList(value: AccessListish): Array<[string, Array<string>]> {
+    return accessListify(value).map((set) => [set.address, set.storageKeys]);
 }
 
 function _parseLegacy(data: Uint8Array): TransactionLike {
@@ -137,14 +140,14 @@ function _parseLegacy(data: Uint8Array): TransactionLike {
         "invalid field count for legacy transaction", "data", data);
 
     const tx: TransactionLike = {
-        type:     0,
-        nonce:    handleNumber(fields[0], "nonce"),
+        type: 0,
+        nonce: handleNumber(fields[0], "nonce"),
         gasPrice: handleUint(fields[1], "gasPrice"),
         gasLimit: handleUint(fields[2], "gasLimit"),
-        to:       handleAddress(fields[3]),
-        value:    handleUint(fields[4], "value"),
-        data:     hexlify(fields[5]),
-        chainId:  BN_0
+        to: handleAddress(fields[3]),
+        value: handleUint(fields[4], "value"),
+        data: hexlify(fields[5]),
+        chainId: BN_0
     };
 
     // Legacy unsigned transaction
@@ -174,7 +177,7 @@ function _parseLegacy(data: Uint8Array): TransactionLike {
             v
         });
 
-        tx.hash = keccak256(data);
+        tx.hash = keccak256_hex(data);
     }
 
     return tx;
@@ -185,7 +188,7 @@ function _serializeLegacy(tx: Transaction, sig?: Signature): string {
         formatNumber(tx.nonce || 0, "nonce"),
         formatNumber(tx.gasPrice || 0, "gasPrice"),
         formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to): "0x"),
+        ((tx.to != null) ? formatHexAddress(tx.to) : "0x"),
         formatNumber(tx.value || 0, "value"),
         (tx.data || "0x"),
     ];
@@ -198,7 +201,7 @@ function _serializeLegacy(tx: Transaction, sig?: Signature): string {
         // We have a chainId in the tx and an EIP-155 v in the signature,
         // make sure they agree with each other
         assertArgument(!sig || sig.networkV == null || sig.legacyChainId === chainId,
-             "tx.chainId/sig.v mismatch", "sig", sig);
+            "tx.chainId/sig.v mismatch", "sig", sig);
 
     } else if (tx.signature) {
         // No explicit chainId, but EIP-155 have a derived implicit chainId
@@ -263,23 +266,23 @@ function _parseEip1559(data: Uint8Array): TransactionLike {
     const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
     const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
     const tx: TransactionLike = {
-        type:                  2,
-        chainId:               handleUint(fields[0], "chainId"),
-        nonce:                 handleNumber(fields[1], "nonce"),
-        maxPriorityFeePerGas:  maxPriorityFeePerGas,
-        maxFeePerGas:          maxFeePerGas,
-        gasPrice:              null,
-        gasLimit:              handleUint(fields[4], "gasLimit"),
-        to:                    handleAddress(fields[5]),
-        value:                 handleUint(fields[6], "value"),
-        data:                  hexlify(fields[7]),
-        accessList:            handleAccessList(fields[8], "accessList"),
+        type: 2,
+        chainId: handleUint(fields[0], "chainId"),
+        nonce: handleNumber(fields[1], "nonce"),
+        maxPriorityFeePerGas,
+        maxFeePerGas,
+        gasPrice: null,
+        gasLimit: handleUint(fields[4], "gasLimit"),
+        to: handleAddress(fields[5]),
+        value: handleUint(fields[6], "value"),
+        data: hexlify(fields[7]),
+        accessList: handleAccessList(fields[8], "accessList"),
     };
 
     // Unsigned EIP-1559 Transaction
     if (fields.length === 9) { return tx; }
 
-    tx.hash = keccak256(data);
+    tx.hash = keccak256_hex(data);
 
     _parseEipSignature(tx, fields.slice(9), _serializeEip1559);
 
@@ -293,7 +296,7 @@ function _serializeEip1559(tx: TransactionLike, sig?: Signature): string {
         formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
         formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
         formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to): "0x"),
+        ((tx.to != null) ? formatHexAddress(tx.to) : "0x"),
         formatNumber(tx.value || 0, "value"),
         (tx.data || "0x"),
         (formatAccessList(tx.accessList || []))
@@ -305,7 +308,7 @@ function _serializeEip1559(tx: TransactionLike, sig?: Signature): string {
         fields.push(toBeArray(sig.s));
     }
 
-    return concat([ "0x02", encodeRlp(fields)]);
+    return concat(["0x02", encodeRlp(fields)]);
 }
 
 function _parseEip2930(data: Uint8Array): TransactionLike {
@@ -315,21 +318,21 @@ function _parseEip2930(data: Uint8Array): TransactionLike {
         "invalid field count for transaction type: 1", "data", hexlify(data));
 
     const tx: TransactionLike = {
-        type:       1,
-        chainId:    handleUint(fields[0], "chainId"),
-        nonce:      handleNumber(fields[1], "nonce"),
-        gasPrice:   handleUint(fields[2], "gasPrice"),
-        gasLimit:   handleUint(fields[3], "gasLimit"),
-        to:         handleAddress(fields[4]),
-        value:      handleUint(fields[5], "value"),
-        data:       hexlify(fields[6]),
+        type: 1,
+        chainId: handleUint(fields[0], "chainId"),
+        nonce: handleNumber(fields[1], "nonce"),
+        gasPrice: handleUint(fields[2], "gasPrice"),
+        gasLimit: handleUint(fields[3], "gasLimit"),
+        to: handleAddress(fields[4]),
+        value: handleUint(fields[5], "value"),
+        data: hexlify(fields[6]),
         accessList: handleAccessList(fields[7], "accessList")
     };
 
     // Unsigned EIP-2930 Transaction
     if (fields.length === 8) { return tx; }
 
-    tx.hash = keccak256(data);
+    tx.hash = keccak256_hex(data);
 
     _parseEipSignature(tx, fields.slice(8), _serializeEip2930);
 
@@ -342,7 +345,7 @@ function _serializeEip2930(tx: TransactionLike, sig?: Signature): string {
         formatNumber(tx.nonce || 0, "nonce"),
         formatNumber(tx.gasPrice || 0, "gasPrice"),
         formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to): "0x"),
+        ((tx.to != null) ? formatHexAddress(tx.to) : "0x"),
         formatNumber(tx.value || 0, "value"),
         (tx.data || "0x"),
         (formatAccessList(tx.accessList || []))
@@ -354,7 +357,7 @@ function _serializeEip2930(tx: TransactionLike, sig?: Signature): string {
         fields.push(toBeArray(sig.s));
     }
 
-    return concat([ "0x01", encodeRlp(fields)]);
+    return concat(["0x01", encodeRlp(fields)]);
 }
 
 /**
@@ -371,6 +374,10 @@ function _serializeEip2930(tx: TransactionLike, sig?: Signature): string {
  *    //_result:
  */
 export class Transaction implements TransactionLike<string> {
+    tronTransactionType?: TransactionType
+
+    #chainNamespace: ChainNamespace
+    #chainId: bigint;
     #type: null | number;
     #to: null | string;
     #data: string;
@@ -380,9 +387,9 @@ export class Transaction implements TransactionLike<string> {
     #maxPriorityFeePerGas: null | bigint;
     #maxFeePerGas: null | bigint;
     #value: bigint;
-    #chainId: bigint;
     #sig: null | Signature;
     #accessList: null | AccessList;
+    customData?: any
 
     /**
      *  The transaction type.
@@ -429,7 +436,7 @@ export class Transaction implements TransactionLike<string> {
      */
     get to(): null | string { return this.#to; }
     set to(value: null | string) {
-        this.#to = (value == null) ? null: getAddress(value);
+        this.#to = (value == null) ? null : getAddress(value, this.#chainNamespace);
     }
 
     /**
@@ -456,7 +463,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set gasPrice(value: null | BigNumberish) {
-        this.#gasPrice = (value == null) ? null: getBigInt(value, "gasPrice");
+        this.#gasPrice = (value == null) ? null : getBigInt(value, "gasPrice");
     }
 
     /**
@@ -472,7 +479,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set maxPriorityFeePerGas(value: null | BigNumberish) {
-        this.#maxPriorityFeePerGas = (value == null) ? null: getBigInt(value, "maxPriorityFeePerGas");
+        this.#maxPriorityFeePerGas = (value == null) ? null : getBigInt(value, "maxPriorityFeePerGas");
     }
 
     /**
@@ -488,7 +495,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set maxFeePerGas(value: null | BigNumberish) {
-        this.#maxFeePerGas = (value == null) ? null: getBigInt(value, "maxFeePerGas");
+        this.#maxFeePerGas = (value == null) ? null : getBigInt(value, "maxFeePerGas");
     }
 
     /**
@@ -513,11 +520,16 @@ export class Transaction implements TransactionLike<string> {
     set chainId(value: BigNumberish) { this.#chainId = getBigInt(value); }
 
     /**
+     *  The chain ID this transaction is valid on.
+     */
+    get chainNamespace(): ChainNamespace { return this.#chainNamespace; }
+
+    /**
      *  If signed, the signature for this transaction.
      */
     get signature(): null | Signature { return this.#sig || null; }
     set signature(value: null | SignatureLike) {
-        this.#sig = (value == null) ? null: Signature.from(value);
+        this.#sig = (value == null) ? null : Signature.from(value);
     }
 
     /**
@@ -529,19 +541,20 @@ export class Transaction implements TransactionLike<string> {
     get accessList(): null | AccessList {
         const value = this.#accessList || null;
         if (value == null) {
-            if (this.type === 1 || this.type === 2) { return [ ]; }
+            if (this.type === 1 || this.type === 2) { return []; }
             return null;
         }
         return value;
     }
     set accessList(value: null | AccessListish) {
-        this.#accessList = (value == null) ? null: accessListify(value);
+        this.#accessList = (value == null) ? null : accessListify(value);
     }
 
     /**
      *  Creates a new Transaction with default values.
      */
-    constructor() {
+    constructor(chainNamespace: ChainNamespace) {
+        this.#chainNamespace = chainNamespace
         this.#type = null;
         this.#to = null;
         this.#nonce = 0;
@@ -561,7 +574,7 @@ export class Transaction implements TransactionLike<string> {
      */
     get hash(): null | string {
         if (this.signature == null) { return null; }
-        return keccak256(this.serialized);
+        return keccak256_hex(this.serialized);
     }
 
     /**
@@ -571,7 +584,7 @@ export class Transaction implements TransactionLike<string> {
      *  this transaction.
      */
     get unsignedHash(): string {
-        return keccak256(this.unsignedSerialized);
+        return keccak256_hex(this.unsignedSerialized);
     }
 
     /**
@@ -579,7 +592,7 @@ export class Transaction implements TransactionLike<string> {
      */
     get from(): null | string {
         if (this.signature == null) { return null; }
-        return recoverAddress(this.unsignedHash, this.signature);
+        return recoverAddress(this.unsignedHash, this.signature, this.#chainNamespace);
     }
 
     /**
@@ -597,7 +610,7 @@ export class Transaction implements TransactionLike<string> {
      *  transaction are non-null.
      */
     isSigned(): this is (Transaction & { type: number, typeName: string, from: string, signature: Signature }) {
-    //isSigned(): this is SignedTransaction {
+        //isSigned(): this is SignedTransaction {
         return this.signature != null;
     }
 
@@ -608,7 +621,7 @@ export class Transaction implements TransactionLike<string> {
      *  use [[unsignedSerialized]].
      */
     get serialized(): string {
-        assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized"});
+        assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
 
         switch (this.inferType()) {
             case 0:
@@ -675,7 +688,7 @@ export class Transaction implements TransactionLike<string> {
         assert(!hasFee || (this.type !== 0 && this.type !== 1), "transaction type cannot have maxFeePerGas or maxPriorityFeePerGas", "BAD_DATA", { value: this });
         assert(this.type !== 0 || !hasAccessList, "legacy transaction cannot have accessList", "BAD_DATA", { value: this })
 
-        const types: Array<number> = [ ];
+        const types: Array<number> = [];
 
         // Explicit type
         if (this.type != null) {
@@ -731,7 +744,7 @@ export class Transaction implements TransactionLike<string> {
      *  This provides a Type Guard that the related properties are
      *  non-null.
      */
-    isLondon(): this is (Transaction & { type: 2, accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint}) {
+    isLondon(): this is (Transaction & { type: 2, accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }) {
         return (this.type === 2);
     }
 
@@ -739,7 +752,7 @@ export class Transaction implements TransactionLike<string> {
      *  Create a copy of this transaciton.
      */
     clone(): Transaction {
-        return Transaction.from(this);
+        return Transaction.from(this, this.#chainNamespace);
     }
 
     /**
@@ -754,7 +767,7 @@ export class Transaction implements TransactionLike<string> {
         return {
             type: this.type,
             to: this.to,
-//            from: this.from,
+            //            from: this.from,
             data: this.data,
             nonce: this.nonce,
             gasLimit: s(this.gasLimit),
@@ -763,7 +776,7 @@ export class Transaction implements TransactionLike<string> {
             maxFeePerGas: s(this.maxFeePerGas),
             value: s(this.value),
             chainId: s(this.chainId),
-            sig: this.signature ? this.signature.toJSON(): null,
+            sig: this.signature ? this.signature.toJSON() : null,
             accessList: this.accessList
         };
     }
@@ -772,24 +785,25 @@ export class Transaction implements TransactionLike<string> {
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
      */
-    static from(tx?: string | TransactionLike<string>): Transaction {
-        if (tx == null) { return new Transaction(); }
+    static from(tx: string | TransactionLike<string> | undefined, chainNamespace: ChainNamespace): Transaction {
+        if (tx == null) { return new Transaction(chainNamespace); }
 
-        if (typeof(tx) === "string") {
+        if (typeof (tx) === "string") {
             const payload = getBytes(tx);
 
             if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
-                return Transaction.from(_parseLegacy(payload));
+                return Transaction.from(_parseLegacy(payload), chainNamespace);
             }
 
-            switch(payload[0]) {
-                case 1: return Transaction.from(_parseEip2930(payload));
-                case 2: return Transaction.from(_parseEip1559(payload));
+            switch (payload[0]) {
+                case 1: return Transaction.from(_parseEip2930(payload), chainNamespace);
+                case 2: return Transaction.from(_parseEip1559(payload), chainNamespace);
             }
             assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: "from" });
         }
 
-        const result = new Transaction();
+        const result = new Transaction(chainNamespace);
+        if (tx.tronTransactionType != null) { result.tronTransactionType = tx.tronTransactionType; }
         if (tx.type != null) { result.type = tx.type; }
         if (tx.to != null) { result.to = tx.to; }
         if (tx.nonce != null) { result.nonce = tx.nonce; }
@@ -802,6 +816,7 @@ export class Transaction implements TransactionLike<string> {
         if (tx.chainId != null) { result.chainId = tx.chainId; }
         if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
         if (tx.accessList != null) { result.accessList = tx.accessList; }
+        if (tx.customData != null) { result.customData = tx.customData; }
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);

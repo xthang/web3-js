@@ -1,14 +1,14 @@
 import assert from "assert";
-import { loadTests } from "./utils.js";
-import type { TestCaseTypedData } from "./types.js";
+import { loadTests } from "./utils";
+import type { TestCaseTypedData } from "./types";
 
-import { TypedDataEncoder } from "../index.js";
+import { TypedDataEncoder } from "../index";
 
 
-describe("Tests Typed Data (EIP-712)", function() {
+describe("Tests Typed Data (EIP-712)", function () {
     const tests = loadTests<TestCaseTypedData>("typed-data");
     for (const test of tests) {
-        it(`tests encoding typed-data: ${ test.name }`, function() {
+        it(`tests encoding typed-data: ${test.name}`, function () {
             const encoder = TypedDataEncoder.from(test.types);
             assert.equal(encoder.primaryType, test.primaryType, "primaryType");
             assert.equal(encoder.encode(test.data), test.encoded, "encoded");

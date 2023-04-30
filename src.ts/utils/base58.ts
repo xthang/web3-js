@@ -12,11 +12,10 @@
  *  @_subsection: api/utils:Base58 Encoding [about-base58]
  */
 
-import { getBytes } from "./data.js";
-import { assertArgument } from "./errors.js";
-import { toBigInt } from "./maths.js";
-
-import type { BytesLike } from "./index.js";
+import { getBytes } from "./data";
+import { assertArgument } from "./errors";
+import { toBigInt } from "./maths";
+import type { BytesLike } from "./index";
 
 
 const Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";

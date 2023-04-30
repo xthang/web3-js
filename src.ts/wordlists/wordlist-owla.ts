@@ -1,6 +1,6 @@
 
-import { WordlistOwl } from "./wordlist-owl.js";
-import { decodeOwlA } from "./decode-owla.js";
+import { WordlistOwl } from "./wordlist-owl";
+import { decodeOwlA } from "./decode-owla";
 
 /**
  *  An OWL-A format Wordlist extends the OWL format to add an

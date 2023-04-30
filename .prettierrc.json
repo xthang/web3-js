@@ -1,0 +1,10 @@
+{
+    "printWidth": 180,
+    "tabWidth": 4,
+    "semi": false,
+    "singleQuote": false,
+    "trailingComma": "none",
+    "pluginSearchDirs": false,
+    "bracketSpacing": true,
+    "proseWrap": "preserve"
+}

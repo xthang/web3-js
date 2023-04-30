@@ -1,7 +1,7 @@
-import { assertArgument } from "../utils/index.js";
+import { assertArgument } from "../utils/index";
 
-import { decodeBits } from "./bit-reader.js";
-import { decodeOwl } from "./decode-owl.js";
+import { decodeBits } from "./bit-reader";
+import { decodeOwl } from "./decode-owl";
 
 /**
  *  @_ignore

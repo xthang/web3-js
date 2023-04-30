@@ -4,15 +4,12 @@
  *  @_section: api/utils/errors:Errors  [about-errors]
  */
 
-import { version } from "../_version.js";
-
-import { defineProperties } from "./properties.js";
-
+import { version } from "../_version";
 import type {
     TransactionRequest, TransactionReceipt, TransactionResponse
-} from "../providers/index.js";
-
-import type { FetchRequest, FetchResponse } from "./fetch.js";
+} from "../providers/index";
+import type { FetchRequest, FetchResponse } from "./fetch";
+import { defineProperties } from "./properties";
 
 export type ErrorInfo<T> = Omit<T, "code" | "name" | "message">;
 
@@ -34,11 +31,11 @@ function stringify(value: any): any {
         return result;
     }
 
-    if (typeof(value) === "object" && typeof(value.toJSON) === "function") {
+    if (typeof (value) === "object" && typeof (value.toJSON) === "function") {
         return stringify(value.toJSON());
     }
 
-    switch (typeof(value)) {
+    switch (typeof (value)) {
         case "boolean": case "symbol":
             return value.toString();
         case "bigint":
@@ -50,7 +47,7 @@ function stringify(value: any): any {
         case "object": {
             const keys = Object.keys(value);
             keys.sort();
-            return "{ " + keys.map((k) => `${ stringify(k) }: ${ stringify(value[k]) }`).join(", ") + " }";
+            return "{ " + keys.map((k) => `${stringify(k)}: ${stringify(value[k])}`).join(", ") + " }";
         }
     }
 
@@ -126,7 +123,7 @@ export type ErrorCode =
     "CANCELLED" |
 
     // Operational Errors
-    "BUFFER_OVERRUN" |  "NUMERIC_FAULT" |
+    "BUFFER_OVERRUN" | "NUMERIC_FAULT" |
 
     // Argument Errors
     "INVALID_ARGUMENT" | "MISSING_ARGUMENT" | "UNEXPECTED_ARGUMENT" |
@@ -139,7 +136,7 @@ export type ErrorCode =
 
     // User Interaction
     "ACTION_REJECTED"
-;
+    ;
 
 /**
  *  All errors in Ethers include properties to assist in
@@ -171,7 +168,7 @@ export interface EthersError<T extends ErrorCode = ErrorCode> extends Error {
  *  know what the underlying problem is.
  */
 export interface UnknownError extends EthersError<"UNKNOWN_ERROR"> {
-    [ key: string ]: any;
+    [key: string]: any;
 }
 
 /**
@@ -262,8 +259,7 @@ export interface BadDataError extends EthersError<"BAD_DATA"> {
  *  This Error indicates that the operation was cancelled by a
  *  programmatic call, for example to ``cancel()``.
  */
-export interface CancelledError extends EthersError<"CANCELLED"> {
-}
+export type CancelledError = EthersError<"CANCELLED">
 
 
 // Operational Errors
@@ -379,9 +375,10 @@ export type CallExceptionAction = "call" | "estimateGas" | "getTransactionResult
  *  The related transaction that caused the error.
  */
 export type CallExceptionTransaction = {
-    to: null | string;
     from?: string;
-    data: string;
+    to?: string;
+    value?: string | bigint;
+    data?: string;
 };
 
 /**
@@ -555,31 +552,31 @@ export interface ActionRejectedError extends EthersError<"ACTION_REJECTED"> {
  *  @flatworm-skip-docs
  */
 export type CodedEthersError<T> =
-    T extends "UNKNOWN_ERROR" ? UnknownError:
-    T extends "NOT_IMPLEMENTED" ? NotImplementedError:
-    T extends "UNSUPPORTED_OPERATION" ? UnsupportedOperationError:
-    T extends "NETWORK_ERROR" ? NetworkError:
-    T extends "SERVER_ERROR" ? ServerError:
-    T extends "TIMEOUT" ? TimeoutError:
-    T extends "BAD_DATA" ? BadDataError:
-    T extends "CANCELLED" ? CancelledError:
+    T extends "UNKNOWN_ERROR" ? UnknownError :
+    T extends "NOT_IMPLEMENTED" ? NotImplementedError :
+    T extends "UNSUPPORTED_OPERATION" ? UnsupportedOperationError :
+    T extends "NETWORK_ERROR" ? NetworkError :
+    T extends "SERVER_ERROR" ? ServerError :
+    T extends "TIMEOUT" ? TimeoutError :
+    T extends "BAD_DATA" ? BadDataError :
+    T extends "CANCELLED" ? CancelledError :
 
-    T extends "BUFFER_OVERRUN" ? BufferOverrunError:
-    T extends "NUMERIC_FAULT" ? NumericFaultError:
+    T extends "BUFFER_OVERRUN" ? BufferOverrunError :
+    T extends "NUMERIC_FAULT" ? NumericFaultError :
 
-    T extends "INVALID_ARGUMENT" ? InvalidArgumentError:
-    T extends "MISSING_ARGUMENT" ? MissingArgumentError:
-    T extends "UNEXPECTED_ARGUMENT" ? UnexpectedArgumentError:
+    T extends "INVALID_ARGUMENT" ? InvalidArgumentError :
+    T extends "MISSING_ARGUMENT" ? MissingArgumentError :
+    T extends "UNEXPECTED_ARGUMENT" ? UnexpectedArgumentError :
 
-    T extends "CALL_EXCEPTION" ? CallExceptionError:
-    T extends "INSUFFICIENT_FUNDS" ? InsufficientFundsError:
-    T extends "NONCE_EXPIRED" ? NonceExpiredError:
-    T extends "OFFCHAIN_FAULT" ? OffchainFaultError:
-    T extends "REPLACEMENT_UNDERPRICED" ? ReplacementUnderpricedError:
-    T extends "TRANSACTION_REPLACED" ? TransactionReplacedError:
-    T extends "UNCONFIGURED_NAME" ? UnconfiguredNameError:
+    T extends "CALL_EXCEPTION" ? CallExceptionError :
+    T extends "INSUFFICIENT_FUNDS" ? InsufficientFundsError :
+    T extends "NONCE_EXPIRED" ? NonceExpiredError :
+    T extends "OFFCHAIN_FAULT" ? OffchainFaultError :
+    T extends "REPLACEMENT_UNDERPRICED" ? ReplacementUnderpricedError :
+    T extends "TRANSACTION_REPLACED" ? TransactionReplacedError :
+    T extends "UNCONFIGURED_NAME" ? UnconfiguredNameError :
 
-    T extends "ACTION_REJECTED" ? ActionRejectedError:
+    T extends "ACTION_REJECTED" ? ActionRejectedError :
 
     never;
 
@@ -630,20 +627,20 @@ export function makeError<K extends ErrorCode, T extends CodedEthersError<K>>(me
         const details: Array<string> = [];
         if (info) {
             if ("message" in info || "code" in info || "name" in info) {
-                throw new Error(`value will overwrite populated values: ${ stringify(info) }`);
+                throw new Error(`value will overwrite populated values: ${stringify(info)}`);
             }
             for (const key in info) {
                 const value = <any>(info[<keyof ErrorInfo<T>>key]);
-//                try {
-                    details.push(key + "=" + stringify(value));
-//                } catch (error: any) {
-//                console.log("MMM", error.message);
-//                    details.push(key + "=[could not serialize object]");
-//                }
+                //                try {
+                details.push(key + "=" + stringify(value));
+                //                } catch (error: any) {
+                //                console.log("MMM", error.message);
+                //                    details.push(key + "=[could not serialize object]");
+                //                }
             }
         }
-        details.push(`code=${ code }`);
-        details.push(`version=${ version }`);
+        details.push(`code=${code}`);
+        details.push(`version=${version}`);
 
         if (details.length) {
             message += " (" + details.join(", ") + ")";
@@ -689,7 +686,7 @@ export function assert<K extends ErrorCode, T extends CodedEthersError<K>>(check
  *  any further code does not need additional compile-time checks.
  */
 export function assertArgument(check: unknown, message: string, name: string, value: unknown): asserts check {
-    assert(check, message, "INVALID_ARGUMENT", { argument: name, value: value });
+    assert(check, message, "INVALID_ARGUMENT", { argument: name, value });
 }
 
 export function assertArgumentCount(count: number, expectedCount: number, message?: string): void {
@@ -697,13 +694,13 @@ export function assertArgumentCount(count: number, expectedCount: number, messag
     if (message) { message = ": " + message; }
 
     assert(count >= expectedCount, "missing arguemnt" + message, "MISSING_ARGUMENT", {
-        count: count,
-        expectedCount: expectedCount
+        count,
+        expectedCount
     });
 
     assert(count <= expectedCount, "too many arguemnts" + message, "UNEXPECTED_ARGUMENT", {
-        count: count,
-        expectedCount: expectedCount
+        count,
+        expectedCount
     });
 }
 
@@ -723,7 +720,7 @@ const _normalizeForms = ["NFD", "NFC", "NFKD", "NFKC"].reduce((accum, form) => {
         }
 
         accum.push(form);
-    } catch(error) { }
+    } catch (error) { }
 
     return accum;
 }, <Array<string>>[]);
@@ -751,7 +748,7 @@ export function assertPrivate(givenGuard: any, guard: any, className?: string): 
             method += ".";
             operation += " " + className;
         }
-        assert(false, `private constructor; use ${ method }from* methods`, "UNSUPPORTED_OPERATION", {
+        assert(false, `private constructor; use ${method}from* methods`, "UNSUPPORTED_OPERATION", {
             operation
         });
     }

@@ -4,8 +4,8 @@
  *  @_section: api/providers/formatting:Formatting  [provider-formatting]
  */
 
-import type { Signature } from "../crypto/index.js";
-import type { AccessList } from "../transaction/index.js";
+import type { Signature } from "../crypto/index";
+import type { AccessList } from "../transaction/index";
 
 /*
 export interface TransactionRequest {

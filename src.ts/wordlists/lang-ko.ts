@@ -1,7 +1,7 @@
-import { id } from "../hash/index.js";
-import { assertArgument, toUtf8String } from "../utils/index.js";
+import { id } from "../hash/index";
+import { assertArgument, toUtf8String } from "../utils/index";
 
-import { Wordlist } from "./wordlist.js";
+import { Wordlist } from "./wordlist";
 
 
 const data = [

@@ -1,10 +1,10 @@
 
-import type { Addressable, NameResolver } from "../address/index.js";
-import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
-import type { TransactionLike } from "../transaction/index.js";
+import type { Addressable, NameResolver } from "../address/index";
+import type { TypedDataDomain, TypedDataField } from "../hash/index";
+import type { TransactionLike } from "../transaction/index";
 
-import type { ContractRunner } from "./contracts.js";
-import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from "./provider.js";
+import type { ContractRunner } from "./contracts";
+import type { Provider, TransactionRequest, TransactionResponse } from "./provider";
 
 /**
  *  A Signer represents an account on the Ethereum Blockchain, and is most often
@@ -35,15 +35,6 @@ export interface Signer extends Addressable, ContractRunner, NameResolver {
      *  Get the address of the Signer.
      */
     getAddress(): Promise<string>;
-
-    /**
-     *  Gets the next nonce required for this Signer to send a transaction.
-     *
-     *  @param blockTag - The blocktag to base the transaction count on, keep in mind
-     *         many nodes do not honour this value and silently ignore it [default: ``"latest"``]
-     */
-    getNonce(blockTag?: BlockTag): Promise<number>;
-
 
     ////////////////////
     // Preparation

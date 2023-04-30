@@ -1,11 +1,11 @@
 
-import { getNumber } from "../utils/index.js";
+import { getNumber } from "../utils/index";
 
-import type { Subscriber } from "./abstract-provider.js";
+import type { Subscriber } from "./abstract-provider";
 
 
 //#TODO: Temp
-import type { Provider } from "./provider.js";
+import type { Provider } from "./provider";
 
 /**
  *  @TODO

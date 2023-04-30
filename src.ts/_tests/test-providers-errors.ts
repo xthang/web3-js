@@ -4,13 +4,14 @@ import assert from "assert";
 import {
     concat, dataSlice, id, toBeArray, zeroPadValue,
     isCallException, isError,
-    Wallet
-} from "../index.js";
+    Wallet,
+    Eip155Wallet
+} from "../index";
 
-import { getProvider, setupProviders, providerNames } from "./create-provider.js";
-import { stall } from "./utils.js";
+import { getProvider, setupProviders, providerNames } from "./create-provider";
+import { stall } from "./utils";
 
-import type { TransactionResponse } from "../index.js";
+import type { TransactionResponse } from "../index";
 
 type TestCustomError = {
     name: string;
@@ -164,7 +165,7 @@ describe("Tests Provider Call Exception", function() {
 });
 
 describe("Test Provider Blockchain Errors", function() {
-    const wallet = new Wallet(<string>(process.env.FAUCET_PRIVATEKEY));
+    const wallet = new Eip155Wallet(<string>(process.env.FAUCET_PRIVATEKEY));
 
     const networkName = "goerli";
     for (const providerName of providerNames) {

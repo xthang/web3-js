@@ -5,17 +5,17 @@
  */
 export {
     BaseContract, Contract
-} from "./contract.js";
+} from "./contract";
 
 export {
     ContractFactory
-} from "./factory.js";
+} from "./factory";
 
 export {
     ContractEventPayload, ContractUnknownEventPayload,
     ContractTransactionReceipt, ContractTransactionResponse,
     EventLog,
-} from "./wrappers.js";
+} from "./wrappers";
 
 export type {
     BaseContractMethod, ConstantContractMethod,
@@ -25,4 +25,4 @@ export type {
     ContractInterface, ContractMethod, ContractMethodArgs, ContractTransaction,
     DeferredTopicFilter, Overrides,
     WrappedFallback
-} from "./types.js";
+} from "./types";

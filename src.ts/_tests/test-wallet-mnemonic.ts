@@ -1,15 +1,15 @@
 
 import assert from "assert";
 
-import { sha256 } from "../crypto/index.js";
-import { toUtf8Bytes } from "../utils/utf8.js";
+import { sha256 } from "../crypto/index";
+import { toUtf8Bytes } from "../utils/utf8";
 
-import { wordlists } from "../wordlists/wordlists.js";
+import { wordlists } from "../wordlists/wordlists";
 
-import { Mnemonic } from "../index.js";
+import { Mnemonic } from "../index";
 
-import { loadTests } from "./utils.js";
-import type { TestCaseMnemonic } from "./types.js";
+import { loadTests } from "./utils";
+import type { TestCaseMnemonic } from "./types";
 
 const decoder = new TextDecoder();
 function fromHex(hex: string): string {

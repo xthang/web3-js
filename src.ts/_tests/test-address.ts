@@ -1,28 +1,27 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
-
+import {
+    convertToHexAddress, getIcapAddress,
+    getCreateAddress, getCreate2Address
+} from "../index";
+import { ChainNamespace } from "../providers/network";
 import type {
     TestCaseAccount,
     TestCaseCreate,
     TestCaseCreate2
-} from "./types.js";
-
-import {
-    getAddress, getIcapAddress,
-    getCreateAddress, getCreate2Address
-} from "../index.js";
+} from "./types";
+import { loadTests } from "./utils";
 
 
 describe("computes checksum address", function() {
     const tests = loadTests<TestCaseAccount>("accounts");
     for (const test of tests) {
         it(`computes the checksum address: ${ test.name }`, function() {
-            assert.equal(getAddress(test.address), test.address);
-            assert.equal(getAddress(test.icap), test.address);
-            assert.equal(getAddress(test.address.substring(2)), test.address);
-            assert.equal(getAddress(test.address.toLowerCase()), test.address);
-            assert.equal(getAddress("0x" + test.address.substring(2).toUpperCase()), test.address);
+            assert.equal(convertToHexAddress(test.address, ChainNamespace.eip155), test.address);
+            assert.equal(convertToHexAddress(test.icap, ChainNamespace.eip155), test.address);
+            assert.equal(convertToHexAddress(test.address.substring(2), ChainNamespace.eip155), test.address);
+            assert.equal(convertToHexAddress(test.address.toLowerCase(), ChainNamespace.eip155), test.address);
+            assert.equal(convertToHexAddress("0x" + test.address.substring(2).toUpperCase(), ChainNamespace.eip155), test.address);
         });
     }
 
@@ -37,7 +36,7 @@ describe("computes checksum address", function() {
     invalidAddresses.forEach(({ name, value }) => {
         it(`correctly fails on invalid address: ${ name }`, function() {
             assert.throws(function() {
-                getAddress(value);
+                convertToHexAddress(ChainNamespace.eip155, value);
             }, function(error: any) {
                 return (error.code === "INVALID_ARGUMENT" &&
                     error.message.match(/^invalid address/) &&
@@ -50,7 +49,7 @@ describe("computes checksum address", function() {
     it("correctly fails on invalid checksum", function() {
         const value = "0x8ba1f109551bD432803012645Ac136ddd64DBa72"
         assert.throws(function() {
-            getAddress(value);
+            convertToHexAddress(value, ChainNamespace.eip155);
         }, function(error: any) {
             return (error.code === "INVALID_ARGUMENT" &&
                 error.message.match(/^bad address checksum/) &&
@@ -62,7 +61,7 @@ describe("computes checksum address", function() {
     it("correctly fails on invalid IBAN checksum", function() {
         const value = "XE65GB6LDNXYOFTX0NSV3FUWKOWIXAMJK37";
         assert.throws(function() {
-            getAddress(value);
+            convertToHexAddress(value, ChainNamespace.eip155);
         }, function(error: any) {
             return (error.code === "INVALID_ARGUMENT" &&
                 error.message.match(/^bad icap checksum/) &&
@@ -77,8 +76,8 @@ describe("computes ICAP address", function() {
     for (const test of tests) {
         it(`computes the ICAP address: ${ test.name }`, function() {
             assert.equal(getIcapAddress(test.address), test.icap);
-            assert.equal(getAddress(test.address.toLowerCase()), test.address);
-            assert.equal(getAddress("0x" + test.address.substring(2).toUpperCase()), test.address);
+            assert.equal(convertToHexAddress(test.address.toLowerCase(), ChainNamespace.eip155), test.address);
+            assert.equal(convertToHexAddress("0x" + test.address.substring(2).toUpperCase(), ChainNamespace.eip155), test.address);
         });
     }
 });

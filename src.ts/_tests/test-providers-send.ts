@@ -1,10 +1,10 @@
 import assert from "assert";
 
-import { isError, Wallet } from "../index.js";
+import { isError, Wallet } from "../index";
 
-import { getProvider, providerNames, setupProviders } from "./create-provider.js";
+import { getProvider, providerNames, setupProviders } from "./create-provider";
 
-import type { TransactionResponse } from "../index.js";
+import type { TransactionResponse } from "../index";
 
 function stall(duration: number): Promise<void> {
     return new Promise((resolve) => { setTimeout(resolve, duration); });

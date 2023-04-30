@@ -6,10 +6,10 @@
  *
  *  @_subsection: api/crypto:HMAC  [about-hmac]
  */
-import { createHmac } from "./crypto.js";
-import { getBytes, hexlify } from "../utils/index.js";
+import { createHmac } from "./crypto";
+import { getBytes, hexlify } from "../utils/index";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
 
 let locked = false;

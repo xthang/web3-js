@@ -13,12 +13,12 @@
  *  @_subsection: api/abi:Typed Values
  */
 
-import { assertPrivate, defineProperties } from "../utils/index.js";
+import { assertPrivate, defineProperties } from "../utils/index";
 
-import type { Addressable } from "../address/index.js";
-import type { BigNumberish, BytesLike } from "../utils/index.js";
+import type { Addressable } from "../address/index";
+import type { BigNumberish, BytesLike } from "../utils/index";
 
-import type { Result } from "./coders/abstract-coder.js";
+import type { Result } from "./coders/abstract-coder";
 
 const _gaurd = { };
 

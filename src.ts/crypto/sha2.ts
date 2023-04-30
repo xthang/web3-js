@@ -1,8 +1,8 @@
-import { createHash } from "./crypto.js";
+import { createHash } from "./crypto";
 
-import { getBytes, hexlify } from "../utils/index.js";
+import { getBytes, hexlify } from "../utils/index";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
 
 const _sha256 = function(data: Uint8Array): Uint8Array {

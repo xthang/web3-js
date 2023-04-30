@@ -1,18 +1,18 @@
 import semver from "semver";
 
-import { FetchRequest } from "../utils/index.js";
+import { FetchRequest } from "../utils/index";
 
-import { atomicWrite } from "./utils/fs.js";
-import { getLogs } from "./utils/git.js";
-import { loadJson, saveJson } from "./utils/json.js";
-import { resolve } from "./utils/path.js";
+import { atomicWrite } from "./utils/fs";
+import { getLogs } from "./utils/git";
+import { loadJson, saveJson } from "./utils/json";
+import { resolve } from "./utils/path";
 
 
 const cache: Record<string, any> = { };
 
 async function getNpmPackage(name: string): Promise<any> {
     if (!cache[name]) {
-        const resp = await (new FetchRequest("https:/\/registry.npmjs.org/" + name)).send();
+        const resp = await (new FetchRequest("https://registry.npmjs.org/" + name)).send();
         resp.assertOk();
         cache[name] = resp.bodyJson;
     }

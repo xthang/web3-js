@@ -6,39 +6,39 @@
  *  @_section api/utils:Utilities  [about-utils]
  */
 
-export { decodeBase58, encodeBase58 } from "./base58.js";
+export * from "./base58";
 
-export { decodeBase64, encodeBase64 } from "./base64.js";
+export * from "./base64";
 
 export {
     getBytes, getBytesCopy, isHexString, isBytesLike, hexlify, concat, dataLength, dataSlice,
     stripZerosLeft, zeroPadValue, zeroPadBytes
-} from "./data.js";
+} from "./data";
 
 export {
     isCallException, isError,
     assert, assertArgument, assertArgumentCount, assertPrivate, assertNormalize, makeError
-} from "./errors.js"
+} from "./errors"
 
-export { EventPayload } from "./events.js";
+export { EventPayload } from "./events";
 
 export {
     FetchRequest, FetchResponse, FetchCancelSignal,
-} from "./fetch.js";
+} from "./fetch";
 
-export { FixedNumber } from "./fixednumber.js"
+export { FixedNumber } from "./fixednumber"
 
 export {
     fromTwos, toTwos, mask,
     getBigInt, getNumber, getUint, toBigInt, toNumber, toBeHex, toBeArray, toQuantity
-} from "./maths.js";
+} from "./maths";
 
-export { resolveProperties, defineProperties} from "./properties.js";
+export { resolveProperties, defineProperties} from "./properties";
 
-export { decodeRlp } from "./rlp-decode.js";
-export { encodeRlp } from "./rlp-encode.js";
+export { decodeRlp } from "./rlp-decode";
+export { encodeRlp } from "./rlp-encode";
 
-export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
+export { formatEther, parseEther, formatUnits, parseUnits } from "./units";
 
 export {
     toUtf8Bytes,
@@ -46,14 +46,14 @@ export {
     toUtf8String,
 
     Utf8ErrorFuncs,
-} from "./utf8.js";
+} from "./utf8";
 
-export { uuidV4 } from "./uuid.js";
+export { uuidV4 } from "./uuid";
 
 /////////////////////////////
 // Types
 
-export type { BytesLike } from "./data.js";
+export type { BytesLike } from "./data";
 
 export type {
 
@@ -72,24 +72,24 @@ export type {
     CallExceptionAction, CallExceptionTransaction,
 
     CodedEthersError
-} from "./errors.js"
+} from "./errors"
 
-export type { EventEmitterable, Listener } from "./events.js";
+export type { EventEmitterable, Listener } from "./events";
 
 export type {
     GetUrlResponse,
     FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
     FetchGatewayFunc, FetchGetUrlFunc
-} from "./fetch.js";
+} from "./fetch";
 
-export type { FixedFormat } from "./fixednumber.js"
+export type { FixedFormat } from "./fixednumber"
 
-export type { BigNumberish, Numeric } from "./maths.js";
+export type { BigNumberish, Numeric } from "./maths";
 
-export type { RlpStructuredData } from "./rlp.js";
+export type { RlpStructuredData } from "./rlp";
 
 export type {
     Utf8ErrorFunc,
     UnicodeNormalizationForm,
     Utf8ErrorReason
-} from "./utf8.js";
+} from "./utf8";

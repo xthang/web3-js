@@ -1,9 +1,9 @@
-import { toUtf8Bytes, toUtf8String } from "../../utils/utf8.js";
+import { toUtf8Bytes, toUtf8String } from "../../utils/utf8";
 
-import { Typed } from "../typed.js";
-import { DynamicBytesCoder } from "./bytes.js";
+import { Typed } from "../typed";
+import { DynamicBytesCoder } from "./bytes";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 
 /**

@@ -60,10 +60,10 @@
 
 import fs from "fs";
 
-import { id } from "../../hash/id.js";
+import { id } from "../../hash/id";
 
-import { decodeOwl } from "../decode-owl.js";
-import { decodeOwlA } from "../decode-owla.js";
+import { decodeOwl } from "../decode-owl";
+import { decodeOwlA } from "../decode-owla";
 
 const subsChrs = " !#$%&'()*+,-./<=>?@[]^_`{|}~";
 

@@ -8,13 +8,13 @@
 null
 
 // We import all these so we can export lock()
-import { computeHmac } from "./hmac.js";
-import { keccak256 } from "./keccak.js";
-import { ripemd160 } from "./ripemd160.js";
-import { pbkdf2 } from "./pbkdf2.js";
-import { randomBytes } from "./random.js";
-import { scrypt, scryptSync } from "./scrypt.js";
-import { sha256, sha512 } from "./sha2.js";
+import { computeHmac } from "./hmac";
+import { keccak256, keccak256_hex } from "./keccak";
+import { ripemd160 } from "./ripemd160";
+import { pbkdf2 } from "./pbkdf2";
+import { randomBytes } from "./random";
+import { scrypt, scryptSync } from "./scrypt";
+import { sha256, sha512 } from "./sha2";
 
 export {
     computeHmac,
@@ -22,6 +22,7 @@ export {
     randomBytes,
 
     keccak256,
+    keccak256_hex,
     ripemd160,
     sha256, sha512,
 
@@ -29,8 +30,8 @@ export {
     scrypt, scryptSync
 };
 
-export { SigningKey } from "./signing-key.js";
-export { Signature } from "./signature.js";
+export { SigningKey } from "./signing-key";
+export { Signature } from "./signature";
 
 function lock(): void {
     computeHmac.lock();
@@ -50,6 +51,6 @@ export { lock };
 /////////////////////////////
 // Types
 
-export type { ProgressCallback } from "./scrypt.js";
+export type { ProgressCallback } from "./scrypt";
 
-export type { SignatureLike } from "./signature.js";
+export type { SignatureLike } from "./signature";

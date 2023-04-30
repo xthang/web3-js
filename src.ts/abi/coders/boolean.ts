@@ -1,7 +1,7 @@
-import { Typed } from "../typed.js";
-import { Coder } from "./abstract-coder.js";
+import { Typed } from "../typed";
+import { Coder } from "./abstract-coder";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 /**
  *  @_ignore

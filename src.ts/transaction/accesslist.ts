@@ -1,12 +1,12 @@
-import { getAddress } from "../address/index.js";
-import { assertArgument, isHexString } from "../utils/index.js";
+import { formatHexAddress } from "../address/index";
+import { assertArgument, isHexString } from "../utils/index";
 
-import type { AccessList, AccessListish } from "./index.js";
+import type { AccessList, AccessListish } from "./index";
 
 
 function accessSetify(addr: string, storageKeys: Array<string>): { address: string,storageKeys: Array<string> } {
     return {
-        address: getAddress(addr),
+        address: formatHexAddress(addr),
         storageKeys: storageKeys.map((storageKey, index) => {
             assertArgument(isHexString(storageKey, 32), "invalid slot", `storageKeys[${ index }]`, storageKey);
             return storageKey.toLowerCase();

@@ -1,12 +1,8 @@
-import { defineProperties } from "../utils/properties.js";
-
-import { assertArgument } from "../utils/index.js";
-
+import { assertArgument } from "../utils/index";
+import { defineProperties } from "../utils/properties";
 import type {
     FeeData, Provider
-} from "./provider.js";
-
-
+} from "./provider";
 
 const EnsAddress = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 

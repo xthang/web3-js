@@ -1,5 +1,5 @@
-import { Coder } from "./abstract-coder.js";
-import type { Reader, Writer } from "./abstract-coder.js";
+import { Coder } from "./abstract-coder";
+import type { Reader, Writer } from "./abstract-coder";
 
 const Empty = new Uint8Array([ ]);
 

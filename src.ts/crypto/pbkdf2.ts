@@ -6,11 +6,11 @@
  *  @_subsection: api/crypto:Passwords  [about-pbkdf]
  */
 
-import { pbkdf2Sync } from "./crypto.js";
+import { pbkdf2Sync } from "./crypto";
 
-import { getBytes, hexlify } from "../utils/index.js";
+import { getBytes, hexlify } from "../utils/index";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
 
 let locked = false;

@@ -6,7 +6,7 @@
  *
  *  @_subsection: api/crypto:Random Values  [about-crypto-random]
  */
-import { randomBytes as crypto_random } from "./crypto.js";
+import { randomBytes as crypto_random } from "./crypto";
 
 let locked = false;
 

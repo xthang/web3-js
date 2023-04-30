@@ -1,11 +1,12 @@
-import { getAddress } from "../address/index.js";
+import { convertToHexAddress } from "../address/index";
 import {
-    keccak256 as _keccak256, sha256 as _sha256
-} from "../crypto/index.js";
+    keccak256_hex as _keccak256, sha256 as _sha256
+} from "../crypto/index";
+import { ChainNamespace } from "../providers/network";
 import {
     concat, dataLength, getBytes, hexlify, toBeArray, toTwos, toUtf8Bytes, zeroPadBytes, zeroPadValue,
     assertArgument
-} from "../utils/index.js";
+} from "../utils/index";
 
 
 const regexBytes = new RegExp("^bytes([0-9]+)$");
@@ -13,11 +14,11 @@ const regexNumber = new RegExp("^(u?int)([0-9]*)$");
 const regexArray = new RegExp("^(.*)\\[([0-9]*)\\]$");
 
 
-function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
+function _pack(chainNamespace: ChainNamespace, type: string, value: any, isArray?: boolean): Uint8Array {
     switch(type) {
         case "address":
             if (isArray) { return getBytes(zeroPadValue(value, 32)); }
-            return getBytes(getAddress(value));
+            return getBytes(convertToHexAddress(value, chainNamespace));
         case "string":
             return toUtf8Bytes(value);
         case "bytes":
@@ -61,7 +62,7 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
 
         const result: Array<Uint8Array> = [];
         value.forEach(function(value) {
-            result.push(_pack(baseType, value, true));
+            result.push(_pack(chainNamespace, baseType, value, true));
         });
         return getBytes(concat(result));
     }
@@ -80,12 +81,12 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
  *       solidityPacked([ "address", "uint" ], [ addr, 45 ]);
  *       //_result:
  */
-export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
+export function solidityPacked(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
     assertArgument(types.length === values.length, "wrong number of values; expected ${ types.length }", "values", values);
 
     const tight: Array<Uint8Array> = [];
     types.forEach(function(type, index) {
-        tight.push(_pack(type, values[index]));
+        tight.push(_pack(chainNamespace, type, values[index]));
     });
     return hexlify(concat(tight));
 }
@@ -99,8 +100,8 @@ export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArr
  *       solidityPackedKeccak256([ "address", "uint" ], [ addr, 45 ]);
  *       //_result:
  */
-export function solidityPackedKeccak256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
-    return _keccak256(solidityPacked(types, values));
+export function solidityPackedKeccak256(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
+    return _keccak256(solidityPacked(chainNamespace, types, values));
 }
 
 /**
@@ -112,6 +113,6 @@ export function solidityPackedKeccak256(types: ReadonlyArray<string>, values: Re
  *       solidityPackedSha256([ "address", "uint" ], [ addr, 45 ]);
  *       //_result:
  */
-export function solidityPackedSha256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
-    return _sha256(solidityPacked(types, values));
+export function solidityPackedSha256(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
+    return _sha256(solidityPacked(chainNamespace, types, values));
 }

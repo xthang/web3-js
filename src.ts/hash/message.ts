@@ -1,9 +1,10 @@
-import { keccak256 } from "../crypto/index.js";
-import { MessagePrefix } from "../constants/index.js";
-import { recoverAddress } from "../transaction/index.js";
-import { concat, toUtf8Bytes } from "../utils/index.js";
+import { keccak256_hex } from "../crypto/index";
+import { MessagePrefix } from "../constants/index";
+import { recoverAddress } from "../transaction/index";
+import { concat, toUtf8Bytes } from "../utils/index";
 
-import type { SignatureLike } from "../crypto/index.js";
+import type { SignatureLike } from "../crypto/index";
+import { ChainNamespace } from "../providers/network";
 /**
  *  Computes the [[link-eip-191]] personal-sign message digest to sign.
  *
@@ -34,14 +35,14 @@ import type { SignatureLike } from "../crypto/index.js";
  */
 export function hashMessage(message: Uint8Array | string): string {
     if (typeof(message) === "string") { message = toUtf8Bytes(message); }
-    return keccak256(concat([
+    return keccak256_hex(concat([
         toUtf8Bytes(MessagePrefix),
         toUtf8Bytes(String(message.length)),
         message
     ]));
 }
 
-export function verifyMessage(message: Uint8Array | string, sig: SignatureLike): string {
+export function verifyMessage(message: Uint8Array | string, sig: SignatureLike, chainNamespace: ChainNamespace): string {
     const digest = hashMessage(message);
-    return recoverAddress(digest, sig);
+    return recoverAddress(digest, sig, chainNamespace);
 }

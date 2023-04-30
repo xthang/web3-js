@@ -1,6 +1,6 @@
-import { assert } from "./errors.js";
+import { assert } from "./errors";
 
-import type { FetchRequest, FetchCancelSignal, GetUrlResponse } from "./fetch.js";
+import type { FetchRequest, FetchCancelSignal, GetUrlResponse } from "./fetch";
 
 
 declare global {

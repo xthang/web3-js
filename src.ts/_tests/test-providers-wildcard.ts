@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { connect, setupProviders } from "./create-provider.js";
+import { connect, setupProviders } from "./create-provider";
 
 setupProviders();
 
@@ -15,7 +15,7 @@ describe("Test EIP-2544 ENS wildcards", function() {
         assert.equal(await resolver.supportsWildcard(), true, "supportsWildcard()");
 
         // Test pass-through avatar
-        assert.equal(await resolver.getAvatar(), "https:/\/static.ricmoo.com/uploads/profile-06cb9c3031c9.jpg", "getAvatar()");
+        assert.equal(await resolver.getAvatar(), "https://static.ricmoo.com/uploads/profile-06cb9c3031c9.jpg", "getAvatar()");
 
         assert.equal(await resolver.getAddress(), "0x4B711A377B1b3534749FBe5e59Bcf7F94d92EA98", "getAddress()");
     });

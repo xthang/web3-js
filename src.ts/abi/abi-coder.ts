@@ -13,27 +13,23 @@
 
 // See: https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
 
-import { assertArgumentCount, assertArgument } from "../utils/index.js";
-
-import { Coder, Reader, Result, Writer } from "./coders/abstract-coder.js";
-import { AddressCoder } from "./coders/address.js";
-import { ArrayCoder } from "./coders/array.js";
-import { BooleanCoder } from "./coders/boolean.js";
-import { BytesCoder } from "./coders/bytes.js";
-import { FixedBytesCoder } from "./coders/fixed-bytes.js";
-import { NullCoder } from "./coders/null.js";
-import { NumberCoder } from "./coders/number.js";
-import { StringCoder } from "./coders/string.js";
-import { TupleCoder } from "./coders/tuple.js";
-import { ParamType } from "./fragments.js";
-
-import { getAddress } from "../address/index.js";
-import { getBytes, hexlify, makeError } from "../utils/index.js";
-
-import type {
+import { ChainNamespace } from "../providers";
+import {
+    assertArgumentCount, assertArgument, getBytes, hexlify, makeError,
     BytesLike,
     CallExceptionAction, CallExceptionError, CallExceptionTransaction
-} from "../utils/index.js";
+} from "../utils/index";
+import { Coder, Reader, Result, Writer } from "./coders/abstract-coder";
+import { AddressCoder } from "./coders/address";
+import { ArrayCoder } from "./coders/array";
+import { BooleanCoder } from "./coders/boolean";
+import { BytesCoder } from "./coders/bytes";
+import { FixedBytesCoder } from "./coders/fixed-bytes";
+import { NullCoder } from "./coders/null";
+import { NumberCoder } from "./coders/number";
+import { StringCoder } from "./coders/string";
+import { TupleCoder } from "./coders/tuple";
+import { ParamType } from "./fragments";
 
 // https://docs.soliditylang.org/en/v0.8.17/control-structures.html
 const PanicReasons: Map<number, string> = new Map();
@@ -52,14 +48,14 @@ const paramTypeBytes = new RegExp(/^bytes([0-9]*)$/);
 const paramTypeNumber = new RegExp(/^(u?int)([0-9]*)$/);
 
 
-let defaultCoder: null | AbiCoder = null;
+const defaultCoder: { [key: string]: null | AbiCoder } = {};
 
 
-function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | string, from?: null | string, data?: string }, data: null | BytesLike, abiCoder: AbiCoder): CallExceptionError {
+function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | string, from?: null | string, value?: string, data?: string }, data: null | BytesLike, abiCoder: AbiCoder): CallExceptionError {
     let message = "missing revert data";
 
     let reason: null | string = null;
-    const invocation = null;
+    const invocation: any = null;
     let revert: null | { signature: string, name: string, args: Array<any> } = null;
 
     if (data) {
@@ -78,13 +74,13 @@ function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | 
         } else if (hexlify(bytes.slice(0, 4)) === "0x08c379a0") {
             // Error(string)
             try {
-                reason = abiCoder.decode([ "string" ], bytes.slice(4))[0]
+                reason = abiCoder.decode(["string"], bytes.slice(4))[0]
                 revert = {
                     signature: "Error(string)",
                     name: "Error",
-                    args: [ reason ]
+                    args: [reason]
                 };
-                message += `: ${ JSON.stringify(reason) }`;
+                message += `: ${JSON.stringify(reason)}`;
 
             } catch (error) {
                 message += " (could not decode reason; invalid string data)";
@@ -93,14 +89,14 @@ function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | 
         } else if (hexlify(bytes.slice(0, 4)) === "0x4e487b71") {
             // Panic(uint256)
             try {
-                const code = Number(abiCoder.decode([ "uint256" ], bytes.slice(4))[0]);
+                const code = Number(abiCoder.decode(["uint256"], bytes.slice(4))[0]);
                 revert = {
                     signature: "Panic(uint256)",
                     name: "Panic",
-                    args: [ code ]
+                    args: [code]
                 };
-                reason = `Panic due to ${ PanicReasons.get(code) || "UNKNOWN" }(${ code })`;
-                message += `: ${ reason }`;
+                reason = `Panic due to ${PanicReasons.get(code) || "UNKNOWN"}(${code})`;
+                message += `: ${reason}`;
             } catch (error) {
                 message += " (could not decode panic code)";
             }
@@ -110,13 +106,14 @@ function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | 
     }
 
     const transaction: CallExceptionTransaction = {
-        to: (tx.to ? getAddress(tx.to): null),
-        data: (tx.data || "0x")
+        from: tx.from ?? undefined,
+        to: tx.to ?? undefined,
+        value: tx.value,
+        data: tx.data
     };
-    if (tx.from) { transaction.from = getAddress(tx.from); }
 
     return makeError(message, "CALL_EXCEPTION", {
-        action, data, reason, transaction, invocation, revert
+        action, data: data as string, reason, transaction, invocation, revert
     });
 }
 
@@ -124,19 +121,25 @@ function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | 
   * About AbiCoder
   */
 export class AbiCoder {
+    readonly #chainNamespace: ChainNamespace
+
+    constructor(chainNamespace: ChainNamespace) {
+        this.#chainNamespace = chainNamespace
+    }
 
     #getCoder(param: ParamType): Coder {
         if (param.isArray()) {
             return new ArrayCoder(this.#getCoder(param.arrayChildren), param.arrayLength, param.name);
         }
 
-        if (param.isTuple()) {
-            return new TupleCoder(param.components.map((c) => this.#getCoder(c)), param.name);
+        if ((param as ParamType).isTuple()) {
+            return new TupleCoder((param as ParamType).components!.map((c) => this.#getCoder(c)), (param as ParamType).name);
         }
 
+        param = param as ParamType
         switch (param.baseType) {
             case "address":
-                return new AddressCoder(param.name);
+                return new AddressCoder(this.#chainNamespace, param.name);
             case "bool":
                 return new BooleanCoder(param.name);
             case "string":
@@ -150,7 +153,7 @@ export class AbiCoder {
         // u?int[0-9]*
         let match = param.type.match(paramTypeNumber);
         if (match) {
-            let size = parseInt(match[2] || "256");
+            const size = parseInt(match[2] || "256");
             assertArgument(size !== 0 && size <= 256 && (size % 8) === 0,
                 "invalid " + match[1] + " bit length", "param", param);
             return new NumberCoder(size / 8, (match[1] === "int"), param.name);
@@ -159,7 +162,7 @@ export class AbiCoder {
         // bytes[0-9]+
         match = param.type.match(paramTypeBytes);
         if (match) {
-            let size = parseInt(match[1]);
+            const size = parseInt(match[1]);
             assertArgument(size !== 0 && size <= 32, "invalid bytes length", "param", param);
             return new FixedBytesCoder(size, param.name);
         }
@@ -213,11 +216,11 @@ export class AbiCoder {
      *
      *  On the first call, the instance is created internally.
      */
-    static defaultAbiCoder(): AbiCoder {
-        if (defaultCoder == null) {
-            defaultCoder = new AbiCoder();
+    static defaultAbiCoder(chainNamespace: ChainNamespace): AbiCoder {
+        if (defaultCoder[chainNamespace] == null) {
+            defaultCoder[chainNamespace] = new AbiCoder(chainNamespace);
         }
-        return defaultCoder;
+        return defaultCoder[chainNamespace];
     }
 
     /**
@@ -225,7 +228,7 @@ export class AbiCoder {
      *  result %%data%% for the [[CallExceptionAction]] %%action%% against
      *  the Transaction %%tx%%.
      */
-    static getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | string, from?: null | string, data?: string }, data: null | BytesLike): CallExceptionError {
-        return getBuiltinCallException(action, tx, data, AbiCoder.defaultAbiCoder());
+    static getBuiltinCallException(chainNamespace: ChainNamespace, action: CallExceptionAction, tx: { to?: null | string, from?: null | string, data?: string }, data: null | BytesLike): CallExceptionError {
+        return getBuiltinCallException(action, tx, data, AbiCoder.defaultAbiCoder(chainNamespace));
     }
 }

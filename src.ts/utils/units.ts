@@ -19,11 +19,11 @@
  *
  *  @_subsection api/utils:Unit Conversion  [about-units]
  */
-import { assertArgument } from "./errors.js";
-import { FixedNumber } from "./fixednumber.js";
-import { getNumber } from "./maths.js";
+import { assertArgument } from "./errors";
+import { FixedNumber } from "./fixednumber";
+import { getNumber } from "./maths";
 
-import type { BigNumberish, Numeric } from "../utils/index.js";
+import type { BigNumberish, Numeric } from "../utils/index";
 
 
 const names = [

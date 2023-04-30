@@ -4,23 +4,20 @@
  *  @_section: api/providers/ens-resolver:ENS Resolver  [about-ens-rsolver]
  */
 
-import { ZeroAddress } from "../constants/index.js";
-import { Contract } from "../contract/index.js";
-import { dnsEncode, namehash } from "../hash/index.js";
+import { ZeroAddress } from "../constants/index";
+import { Contract } from "../contract/index";
+import { dnsEncode, namehash } from "../hash/index";
 import {
     hexlify, toBeHex,
     defineProperties, encodeBase58,
     assert, assertArgument, isError,
     FetchRequest
-} from "../utils/index.js";
-
-import type { FunctionFragment } from "../abi/index.js";
-
-import type { BytesLike } from "../utils/index.js";
-
-import type { AbstractProvider, AbstractProviderPlugin } from "./abstract-provider.js";
-import type { EnsPlugin } from "./plugins-network.js";
-import type { Provider } from "./provider.js";
+} from "../utils/index";
+import type { FunctionFragment } from "../abi/index";
+import type { BytesLike } from "../utils/index";
+import type { AbstractProvider, AbstractProviderPlugin } from "./abstract-provider";
+import type { EnsPlugin } from "./plugins-network";
+import type { Provider } from "./provider";
 
 // @TODO: This should use the fetch-data:ipfs gateway
 // Trim off the ipfs:// prefix and return the default gateway URL
@@ -33,7 +30,7 @@ function getIpfsLink(link: string): string {
         assertArgument(false, "unsupported IPFS format", "link", link);
     }
 
-    return `https:/\/gateway.ipfs.io/ipfs/${ link }`;
+    return `https://gateway.ipfs.io/ipfs/${ link }`;
 }
 
 /**
@@ -105,9 +102,9 @@ export class BasicMulticoinProviderPlugin extends MulticoinProviderPlugin {
     }
 }
 
-const matcherIpfs = new RegExp("^(ipfs):/\/(.*)$", "i");
+const matcherIpfs = new RegExp("^(ipfs)://(.*)$", "i");
 const matchers = [
-    new RegExp("^(https):/\/(.*)$", "i"),
+    new RegExp("^(https)://(.*)$", "i"),
     new RegExp("^(data):(.*)$", "i"),
     matcherIpfs,
     new RegExp("^eip155:[0-9]+/(erc[0-9]+):(.*)$", "i"),
@@ -142,7 +139,7 @@ export class EnsResolver {
         defineProperties<EnsResolver>(this, { provider, address, name });
         this.#supports2544 = null;
 
-        this.#resolver = new Contract(address, [
+        this.#resolver = new Contract(provider.chainNamespace, address, [
             "function supportsInterface(bytes4) view returns (bool)",
             "function resolve(bytes, bytes) view returns (bytes)",
             "function addr(bytes32) view returns (address)",
@@ -292,14 +289,14 @@ export class EnsResolver {
             const scheme = (ipfs[1] === "e3010170") ? "ipfs": "ipns";
             const length = parseInt(ipfs[4], 16);
             if (ipfs[5].length === length * 2) {
-                return `${ scheme }:/\/${ encodeBase58("0x" + ipfs[2])}`;
+                return `${ scheme }://${ encodeBase58("0x" + ipfs[2])}`;
             }
         }
 
         // Swarm (CID: 1, Type: swarm-manifest; hash/length hard-coded to keccak256/32)
         const swarm = data.match(/^0xe40101fa011b20([0-9a-f]*)$/)
         if (swarm && swarm[1].length === 64) {
-            return `bzz:/\/${ swarm[1] }`;
+            return `bzz://${ swarm[1] }`;
         }
 
         assert(false, `invalid or unsupported content hash data`, "UNSUPPORTED_OPERATION", {
@@ -380,7 +377,7 @@ export class EnsResolver {
 
                         const tokenId = comps[1];
 
-                        const contract = new Contract(comps[0], [
+                        const contract = new Contract(this.provider.chainNamespace, comps[0], [
                             // ERC-721
                             "function tokenURI(uint) view returns (string)",
                             "function ownerOf(uint) view returns (address)",
@@ -505,7 +502,7 @@ export class EnsResolver {
         const ensAddr = await EnsResolver.getEnsAddress(provider);
 
         try {
-            const contract = new Contract(ensAddr, [
+            const contract = new Contract(provider.chainNamespace, ensAddr, [
                 "function resolver(bytes32) view returns (address)"
             ], provider);
 

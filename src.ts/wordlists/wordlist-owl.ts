@@ -2,11 +2,11 @@
 // Use the encode-latin.js script to create the necessary
 // data files to be consumed by this class
 
-import { id } from "../hash/index.js";
-import { assertArgument } from "../utils/index.js";
+import { id } from "../hash/index";
+import { assertArgument } from "../utils/index";
 
-import { decodeOwl } from "./decode-owl.js";
-import { Wordlist } from "./wordlist.js";
+import { decodeOwl } from "./decode-owl";
+import { Wordlist } from "./wordlist";
 
 /**
  *  An OWL format Wordlist is an encoding method that exploits

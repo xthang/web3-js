@@ -17,31 +17,32 @@
  *  @_section: api/wallet:Wallets  [about-wallets]
  */
 
-export { BaseWallet } from "./base-wallet.js";
+export { BaseEip155Wallet } from "./base-wallet-eip155";
 
 export {
     defaultPath,
-
     getAccountPath, getIndexedAccountPath,
-
     HDNodeWallet,
     HDNodeVoidWallet,
-} from "./hdwallet.js";
+} from "./hdwallet";
 
-export { isCrowdsaleJson, decryptCrowdsaleJson } from "./json-crowdsale.js";
+export { isCrowdsaleJson, decryptCrowdsaleJson } from "./json-crowdsale";
 
 export {
     isKeystoreJson,
     decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync
-} from "./json-keystore.js";
+} from "./json-keystore";
 
-export { Mnemonic } from "./mnemonic.js";
+export { Mnemonic } from "./mnemonic";
 
-export { Wallet } from "./wallet.js";
+export { Wallet } from "./wallet";
+export { Eip155Wallet } from "./wallet-eip155";
+export { TronWallet } from "./wallet-tron";
+export { TransactionType } from "./base-wallet-tron";
 
 
-export type { CrowdsaleAccount } from "./json-crowdsale.js";
+export type { CrowdsaleAccount } from "./json-crowdsale";
 export type {
     KeystoreAccount, EncryptOptions
-} from "./json-keystore.js"
+} from "./json-keystore"

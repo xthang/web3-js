@@ -3,13 +3,12 @@
  *
  *  @_section api/utils/fetching:Fetching Web Content  [about-fetch]
  */
-import { decodeBase64, encodeBase64 } from "./base64.js";
-import { hexlify } from "./data.js";
-import { assert, assertArgument } from "./errors.js";
-import { defineProperties } from "./properties.js";
-import { toUtf8Bytes, toUtf8String } from "./utf8.js"
-
-import { getUrl } from "./geturl.js";
+import { decodeBase64, encodeBase64 } from "./base64";
+import { hexlify } from "./data";
+import { assert, assertArgument } from "./errors";
+import { getUrl } from "./geturl";
+import { defineProperties } from "./properties";
+import { toUtf8Bytes, toUtf8String } from "./utf8"
 
 
 export type GetUrlResponse = {
@@ -59,7 +58,7 @@ const SLOT_INTERVAL = 250;
 let getUrlFunc: FetchGetUrlFunc = getUrl;
 
 const reData = new RegExp("^data:([^;:]*)?(;base64)?,(.*)$", "i");
-const reIpfs = new RegExp("^ipfs:/\/(ipfs/)?(.*)$", "i");
+const reIpfs = new RegExp("^ipfs://(ipfs/)?(.*)$", "i");
 
 // If locked, new Gateways cannot be added
 let locked = false;
@@ -97,7 +96,7 @@ function getIpfsGatewayFunc(baseUrl: string): FetchGatewayFunc {
 
 const Gateways: Record<string, FetchGatewayFunc> = {
     "data": dataGatewayFunc,
-    "ipfs": getIpfsGatewayFunc("https:/\/gateway.ipfs.io/ipfs/")
+    "ipfs": getIpfsGatewayFunc("https://gateway.ipfs.io/ipfs/")
 };
 
 const fetchSignals: WeakMap<FetchRequest, () => void> = new WeakMap();
@@ -686,7 +685,7 @@ export class FetchRequest implements Iterable<[ key: string, value: string ]> {
      *  a custom gateway baseUrl.
      *
      *  The default IPFS gateway used internally is
-     *  ``"https:/\/gateway.ipfs.io/ipfs/"``.
+     *  ``"https://gateway.ipfs.io/ipfs/"``.
      */
     static createIpfsGatewayFunc(baseUrl: string): FetchGatewayFunc {
         return getIpfsGatewayFunc(baseUrl);

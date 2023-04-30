@@ -5,8 +5,8 @@
  *  @_subsection api/utils:Recursive-Length Prefix  [about-rlp]
  */
 
-export { decodeRlp } from "./rlp-decode.js";
-export { encodeRlp } from "./rlp-encode.js";
+export { decodeRlp } from "./rlp-decode";
+export { encodeRlp } from "./rlp-encode";
 
 /**
  *  An RLP-encoded structure.

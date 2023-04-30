@@ -1,0 +1,18 @@
+# Ignore artifacts:
+build
+coverage
+public
+vendor
+package-lock.json
+package.json
+infra
+tmp
+cypress.json
+cypress/fixtures/env.json
+ignore
+**/__generated__
+src/abis/types
+src/types/v3
+src/locales/*.js
+src/@uniswap
+ecosystem.config.js

@@ -1,12 +1,12 @@
 
-import { defineProperties, getBytesCopy, hexlify } from "../../utils/index.js";
+import { defineProperties, getBytesCopy, hexlify } from "../../utils/index";
 
-import { Typed } from "../typed.js";
-import { Coder } from "./abstract-coder.js";
+import { Typed } from "../typed";
+import { Coder } from "./abstract-coder";
 
-import type { BytesLike } from "../../utils/index.js";
+import type { BytesLike } from "../../utils/index";
 
-import type { Reader, Writer } from "./abstract-coder.js";
+import type { Reader, Writer } from "./abstract-coder";
 
 
 /**

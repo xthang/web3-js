@@ -1,8 +1,8 @@
 import assert from "assert";
 
-import { loadTests } from "./utils.js";
+import { loadTests } from "./utils";
 
-import type { TestCaseWallet } from "./types.js";
+import type { TestCaseWallet } from "./types";
 
 import {
     isError,
@@ -11,7 +11,8 @@ import {
     encryptKeystoreJson, encryptKeystoreJsonSync,
     isCrowdsaleJson,
     HDNodeWallet, Wallet
-} from "../index.js";
+} from "../index";
+import { ChainNamespace } from "../providers/network";
 
 
 describe("Tests JSON Wallet Formats", function() {
@@ -20,7 +21,7 @@ describe("Tests JSON Wallet Formats", function() {
          if (test.type !== "crowdsale") { return; }
          it(`tests decrypting Crowdsale JSON: ${ test.name }`, async function() {
              const password = Buffer.from(test.password.substring(2), "hex");
-             const account = decryptCrowdsaleJson(test.content, password);
+             const account = decryptCrowdsaleJson(test.content, password, ChainNamespace.eip155);
              assert.equal(account.address, test.address, "address");
          });
      });
@@ -30,7 +31,7 @@ describe("Tests JSON Wallet Formats", function() {
          it(`tests decrypting Keystore JSON (sync): ${ test.name }`, function() {
              this.timeout(20000);
              const password = Buffer.from(test.password.substring(2), "hex");
-             const account = decryptKeystoreJsonSync(test.content, password);
+             const account = decryptKeystoreJsonSync(test.content, password, ChainNamespace.eip155);
              //console.log(account);
              assert.equal(account.address, test.address, "address");
          });
@@ -41,7 +42,7 @@ describe("Tests JSON Wallet Formats", function() {
          it(`tests decrypting Keystore JSON (async): ${ test.name }`, async function() {
              this.timeout(20000);
              const password = Buffer.from(test.password.substring(2), "hex");
-             const account = await decryptKeystoreJson(test.content, password);
+             const account = await decryptKeystoreJson(test.content, password, ChainNamespace.eip155);
              //console.log(account);
              assert.equal(account.address, test.address, "address");
          });
@@ -51,7 +52,7 @@ describe("Tests JSON Wallet Formats", function() {
          it(`tests decrypting JSON (sync): ${ test.name }`, function() {
              this.timeout(20000);
              const password = Buffer.from(test.password.substring(2), "hex");
-             const wallet = Wallet.fromEncryptedJsonSync(test.content, password);
+             const wallet = Wallet.fromEncryptedJsonSync(test.content, password, ChainNamespace.eip155);
              //console.log(wallet);
              assert.equal(wallet.address, test.address, "address");
          });
@@ -61,7 +62,7 @@ describe("Tests JSON Wallet Formats", function() {
          it(`tests decrypting JSON (async): ${ test.name }`, async function() {
              this.timeout(20000);
              const password = Buffer.from(test.password.substring(2), "hex");
-             const wallet = await Wallet.fromEncryptedJson(test.content, password);
+             const wallet = await Wallet.fromEncryptedJson(test.content, password, ChainNamespace.eip155);
              //console.log(wallet);
              assert.equal(wallet.address, test.address, "address");
          });
@@ -74,7 +75,7 @@ describe("Tests JSON Wallet Formats", function() {
          const phrase = wallet.mnemonic.phrase;
          const json = wallet.encryptSync("foobar");
 
-         const wallet2 = Wallet.fromEncryptedJsonSync(json, "foobar");
+         const wallet2 = Wallet.fromEncryptedJsonSync(json, "foobar", ChainNamespace.eip155);
 
          assert.ok(wallet2 instanceof HDNodeWallet && wallet2.mnemonic);
          assert.equal(wallet2.mnemonic.phrase, phrase, "phrase");

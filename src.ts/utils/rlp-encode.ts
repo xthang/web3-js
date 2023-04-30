@@ -1,8 +1,8 @@
 //See: https://github.com/ethereum/wiki/wiki/RLP
 
-import { getBytes } from "./data.js";
+import { getBytes } from "./data";
 
-import type { RlpStructuredData } from "./rlp.js";
+import type { RlpStructuredData } from "./rlp";
 
 
 function arrayifyInteger(value: number): Array<number> {

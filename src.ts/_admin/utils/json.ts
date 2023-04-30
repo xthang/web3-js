@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { atomicWrite } from "./fs.js";
+import { atomicWrite } from "./fs";
 
 
 export function loadJson(path: string): any {

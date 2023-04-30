@@ -9,14 +9,14 @@ import * as secp256k1 from "@noble/secp256k1";
 import {
     concat, dataLength, getBytes, getBytesCopy, hexlify, toBeHex,
     assertArgument
-} from "../utils/index.js";
+} from "../utils/index";
 
-import { computeHmac } from "./hmac.js";
-import { Signature } from "./signature.js";
+import { computeHmac } from "./hmac";
+import { Signature } from "./signature";
 
-import type { BytesLike } from "../utils/index.js";
+import type { BytesLike } from "../utils/index";
 
-import type { SignatureLike } from "./index.js";
+import type { SignatureLike } from "./index";
 
 
 //const N = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");

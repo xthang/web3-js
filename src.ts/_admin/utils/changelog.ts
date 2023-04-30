@@ -1,5 +1,5 @@
 import fs from "fs";
-import { resolve } from "./path.js";
+import { resolve } from "./path";
 
 export type ChangeVersion = {
     version: string;

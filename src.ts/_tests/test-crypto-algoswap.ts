@@ -6,7 +6,7 @@ import {
     keccak256, ripemd160, sha256, sha512,
     pbkdf2, scrypt, scryptSync,
     randomBytes
-} from "../index.js";
+} from "../index";
 
 interface Algorithm {
     (...args: Array<any>): string | Uint8Array | Promise<string>;

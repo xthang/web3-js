@@ -24,8 +24,8 @@ export type AccessListish = AccessList |
                             Record<string, Array<string>>;
 
 
-export { accessListify } from "./accesslist.js";
-export { computeAddress, recoverAddress } from "./address.js";
-export { Transaction } from "./transaction.js";
+export { accessListify } from "./accesslist";
+export { computeAddress, recoverAddress } from "./address";
+export { Transaction } from "./transaction";
 
-export type { TransactionLike } from "./transaction.js";
+export type { TransactionLike } from "./transaction";

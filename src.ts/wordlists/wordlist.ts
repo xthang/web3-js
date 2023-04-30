@@ -1,4 +1,4 @@
-import { defineProperties } from "../utils/index.js";
+import { defineProperties } from "../utils/index";
 
 /**
  *  A Wordlist represents a collection of language-specific

@@ -1,21 +1,21 @@
 
-import { Interface } from "../abi/index.js";
-import { getCreateAddress } from "../address/index.js";
+import { Interface } from "../abi/index";
+import { getCreateAddress } from "../address/index";
 import {
     concat, defineProperties, getBytes, hexlify,
     assert, assertArgument
-} from "../utils/index.js";
+} from "../utils/index";
 
-import { BaseContract, copyOverrides, resolveArgs } from "./contract.js";
+import { BaseContract, copyOverrides, resolveArgs } from "./contract";
 
-import type { InterfaceAbi } from "../abi/index.js";
-import type { ContractRunner } from "../providers/index.js";
-import type { BytesLike } from "../utils/index.js";
+import type { InterfaceAbi } from "../abi/index";
+import type { ChainNamespace, ContractRunner } from "../providers/index";
+import type { BytesLike } from "../utils/index";
 
 import type {
     ContractInterface, ContractMethodArgs, ContractDeployTransaction,
-} from "./types.js";
-import type { ContractTransactionResponse } from "./wrappers.js";
+} from "./types";
+import type { ContractTransactionResponse } from "./wrappers";
 
 
 // A = Arguments to the constructor
@@ -25,8 +25,8 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     readonly bytecode!: string;
     readonly runner!: null | ContractRunner;
 
-    constructor(abi: Interface | InterfaceAbi, bytecode: BytesLike | { object: string }, runner?: null | ContractRunner) {
-        const iface = Interface.from(abi);
+    constructor(chainNamespace: ChainNamespace, abi: Interface | InterfaceAbi, bytecode: BytesLike | { object: string }, runner?: null | ContractRunner) {
+        const iface = Interface.from(chainNamespace, abi);
 
         // Dereference Solidity bytecode objects and allow a missing `0x`-prefix
         if (bytecode instanceof Uint8Array) {
@@ -74,10 +74,10 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     }
 
     connect(runner: null | ContractRunner): ContractFactory<A, I> {
-        return new ContractFactory(this.interface, this.bytecode, runner);
+        return new ContractFactory(this.interface.chainNamespace, this.interface, this.bytecode, runner);
     }
 
-    static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(output: any, runner?: ContractRunner): ContractFactory<A, I> {
+    static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(chainNamespace: ChainNamespace, output: any, runner?: ContractRunner): ContractFactory<A, I> {
         assertArgument(output != null, "bad compiler output", "output", output);
 
         if (typeof(output) === "string") { output = JSON.parse(output); }
@@ -91,6 +91,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             bytecode = output.evm.bytecode;
         }
 
-        return new this(abi, bytecode, runner);
+        return new this(chainNamespace, abi, bytecode, runner);
     }
 }
