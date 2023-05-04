@@ -2,7 +2,7 @@
   "name": "@web3-x/web3.js",
   "description": "A complete and compact Ethereum library, for dapps, wallets and any other tools.",
   "author": "Richard Moore <me@ricmoo.com> + Thang.X",
-  "version": "6.3.1-beta.2",
+  "version": "6.3.1-beta.3",
   "homepage": "git://github.com/xthang",
   "repository": {
     "type": "git",
@@ -31,6 +31,7 @@
     "@adraffy/ens-normalize": "1.9.0",
     "@noble/hashes": "1.1.2",
     "@noble/secp256k1": "1.7.1",
+    "@solana/web3.js": "^1.75.0",
     "aes-js": "4.0.0-beta.3",
     "tronweb": "^5.1.0",
     "tslib": "2.4.0",
@@ -38,7 +39,10 @@
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "13.3.0",
+    "@solana/buffer-layout": "^4.0.1",
+    "@solana/spl-token": "^0.3.7",
     "@types-x/tronweb": "^5.1.0-beta.5",
+    "@types/bs58": "^4.0.1",
     "@types/mocha": "9.1.1",
     "@types/semver": "7.3.12",
     "@typescript-eslint/eslint-plugin": "^5.59.0",

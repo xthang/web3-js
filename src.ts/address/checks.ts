@@ -1,10 +1,7 @@
-import { ChainNamespace } from "../providers/network";
-import { assert, assertArgument } from "../utils/index";
-
-import { convertToHexAddress, formatHexAddress, getAddress } from "./address";
-
-import type { Addressable, AddressLike, NameResolver } from "./index";
-
+import { ChainNamespace } from '../providers/network'
+import { assert, assertArgument } from '../utils/index'
+import { convertToHexAddress, formatHexAddress, getAddress } from './address'
+import type { Addressable, AddressLike, NameResolver } from './index'
 
 /**
  *  Returns true if %%value%% is an object which implements the
@@ -21,7 +18,7 @@ import type { Addressable, AddressLike, NameResolver } from "./index";
  *    //_result:
  */
 export function isAddressable(value: any): value is Addressable {
-    return (value && typeof (value.getAddress) === "function");
+  return value && typeof value.getAddress === 'function'
 }
 
 /**
@@ -50,29 +47,31 @@ export function isAddressable(value: any): value is Addressable {
  *    //_result:
  */
 export function isAddress(value: any, chainNamespace: ChainNamespace): value is string {
-    try {
-        getAddress(value, chainNamespace);
-        return true;
-    } catch (error) { /* empty */ }
-    return false;
+  try {
+    getAddress(value, chainNamespace)
+    return true
+  } catch (error) {
+    /* empty */
+  }
+  return false
 }
 
 async function checkAddress(target: any, promise: Promise<null | string>, chainNamespace: ChainNamespace): Promise<string> {
-    const result = await promise;
-    if (result == null || result === "0x0000000000000000000000000000000000000000") {
-        assert(typeof (target) !== "string", "unconfigured name", "UNCONFIGURED_NAME", { value: target });
-        assertArgument(false, "invalid AddressLike value; did not resolve to a value address", "target", target);
-    }
-    return getAddress(result, chainNamespace);
+  const result = await promise
+  if (result == null || result === '0x0000000000000000000000000000000000000000') {
+    assert(typeof target !== 'string', 'unconfigured name', 'UNCONFIGURED_NAME', { value: target })
+    assertArgument(false, 'invalid AddressLike value; did not resolve to a value address', 'target', target)
+  }
+  return getAddress(result, chainNamespace)
 }
 
 async function checkHexAddress(target: any, promise: Promise<null | string>): Promise<string> {
-    const result = await promise;
-    if (result == null || result === "0x0000000000000000000000000000000000000000") {
-        assert(typeof (target) !== "string", "unconfigured name", "UNCONFIGURED_NAME", { value: target });
-        assertArgument(false, "invalid AddressLike value; did not resolve to a value address", "target", target);
-    }
-    return formatHexAddress(result);
+  const result = await promise
+  if (result == null || result === '0x0000000000000000000000000000000000000000') {
+    assert(typeof target !== 'string', 'unconfigured name', 'UNCONFIGURED_NAME', { value: target })
+    assertArgument(false, 'invalid AddressLike value; did not resolve to a value address', 'target', target)
+  }
+  return formatHexAddress(result)
 }
 
 /**
@@ -113,28 +112,35 @@ async function checkHexAddress(target: any, promise: Promise<null | string>): Pr
  *    //_error:
  */
 export function resolveAddress(target: AddressLike, chainNamespace: ChainNamespace, resolver?: null | NameResolver): string | Promise<string> {
-    if (typeof (target) === "string") {
-        if (chainNamespace === ChainNamespace.eip155) {
-            if (target.match(/^0x[0-9a-f]{40}$/i)) { return formatHexAddress(target); }
-        } else if (chainNamespace === ChainNamespace.solana || chainNamespace === ChainNamespace.tron) {
-            if (target.match(/[0-9a-z]{34}$/i)) { return getAddress(target, chainNamespace); }
-        } else throw new Error('Unsupported chain namespace: ' + chainNamespace)
+  if (typeof target === 'string') {
+    if (chainNamespace === ChainNamespace.eip155) {
+      if (target.match(/^0x[0-9a-f]{40}$/i)) {
+        return formatHexAddress(target)
+      }
+    } else if (chainNamespace === ChainNamespace.solana) {
+      if (target.match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)) {
+        return getAddress(target, chainNamespace)
+      }
+    } else if (chainNamespace === ChainNamespace.tron) {
+      if (target.match(/^[0-9a-z]{34}$/i)) {
+        return getAddress(target, chainNamespace)
+      }
+    } else throw new Error('Unsupported chain namespace: ' + chainNamespace)
 
-        assert(resolver != null, "ENS resolution requires a provider",
-            "UNSUPPORTED_OPERATION", { operation: "resolveName" });
+    assert(resolver != null, 'ENS resolution requires a provider', 'UNSUPPORTED_OPERATION', { operation: 'resolveName' })
 
-        return checkAddress(target, resolver.resolveName(target), chainNamespace);
-    } else if (isAddressable(target)) {
-        return checkAddress(target, target.getAddress(), chainNamespace);
-    } else if (target && typeof (target.then) === "function") {
-        return checkAddress(target, target, chainNamespace);
-    }
+    return checkAddress(target, resolver.resolveName(target), chainNamespace)
+  } else if (isAddressable(target)) {
+    return checkAddress(target, target.getAddress(), chainNamespace)
+  } else if (target && typeof target.then === 'function') {
+    return checkAddress(target, target, chainNamespace)
+  }
 
-    assertArgument(false, "unsupported addressable value", "target", target);
+  assertArgument(false, 'unsupported addressable value', 'target', target)
 }
 
 export function resolveAddressToHex(target: AddressLike, chainNamespace: ChainNamespace, resolver?: null | NameResolver): string | Promise<string> {
-    const resolved = resolveAddress(target, chainNamespace, resolver)
-    if (typeof resolved === 'string') return convertToHexAddress(resolved, chainNamespace)
-    return resolved.then(it => convertToHexAddress(it, chainNamespace))
+  const resolved = resolveAddress(target, chainNamespace, resolver)
+  if (typeof resolved === 'string') return convertToHexAddress(resolved, chainNamespace)
+  return resolved.then((it) => convertToHexAddress(it, chainNamespace))
 }

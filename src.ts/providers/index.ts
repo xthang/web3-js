@@ -4,24 +4,14 @@
  *  @_section: api/providers:Providers  [about-providers]
  */
 
+export { AbstractProvider as AbstractProvider, UnmanagedSubscriber } from "./abstract-provider";
 
-
-export {
-    AbstractProvider as AbstractProvider, UnmanagedSubscriber
-} from "./abstract-provider";
-
-export { AbstractSigner } from "./abstract-signer";
-
-export {
-    AbstractEip155Signer,
-    VoidSigner,
-} from "./abstract-signer-eip155";
-
+export { AbstractSigner, VoidSigner } from "./abstract-signer";
+export { AbstractEip155Signer } from "./abstract-signer-eip155";
+export { AbstractSolanaSigner } from "./abstract-signer-solana";
 export { AbstractTronSigner, } from "./abstract-signer-tron";
 
-export {
-    showThrottleMessage
-} from "./community";
+export { showThrottleMessage } from "./community";
 
 // export { getDefaultProvider } from "./default-provider";
 
@@ -122,6 +112,7 @@ export type {
 // } from "./provider-websocket";
 
 export { TronProvider } from './provider-tron'
+export { SolanaJsonRpcProvider } from './provider-jsonrpc-solana'
 
 export type { Signer } from "./signer";
 

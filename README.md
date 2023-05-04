@@ -1,5 +1,5 @@
 # web3-js
-Cloned from Ethers project + Support multiple network standards
+Cloned from Ethers project + Support multiple Chain Namespaces: EIP155, SOLANA, TRON, ...
 ==================
 
 [![npm (tag)](https://img.shields.io/npm/v/ethers)](https://www.npmjs.com/package/ethers)

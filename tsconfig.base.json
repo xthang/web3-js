@@ -3,10 +3,7 @@
     "moduleResolution": "node",
     "module": "es2022",
     "target": "es2022",
-    "lib": [
-      "es2020",
-      "es5"
-    ],
+    "lib": ["es2020", "es5"],
     "declaration": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -27,8 +24,6 @@
       "tronweb": ["./node_modules/@types-x/tronweb/index.d.ts"]
     }
   },
-  "exclude": [ ],
-  "include": [
-    "./src.ts/**/*.ts"
-  ],
+  "exclude": [],
+  "include": ["./src.ts/**/*.ts"]
 }
