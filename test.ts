@@ -11,20 +11,21 @@ import { TransactionType as TronTransactionType } from './src.ts/wallet/wallet-t
 
 // const address = '0xF555f9e608E4F5d43BD3B38836b5401717c80721'
 // const address = '0xcC6c0FC4beaF823365eF9F445f668cdDE35b0F0c'
-// const address = 'TJEN1hXp61v5U4imTMjVGFwDifKWcZPMXy'
-// const address = 'TVJiKYP9M1Tp5o6yYmkaLUtsKguJo99ooH'
+// const address = 'TJEN1hXp61v5U4imTMjVGFwDifKWcZPMXy' // XT's TronLink
+// const address = 'TU6JdEDQGPus64LTMksvnxF2cv4FQrXPCa' // XT's 0xF555f9e608E4F5d43BD3B38836b5401717c80721
+// const address = 'TVJiKYP9M1Tp5o6yYmkaLUtsKguJo99ooH' // XT's TronLink
 // const address = '2DVaHtcdTf7cm18Zm9VV8rKK4oSnjmTkKE6MiXe18Qsb'
 // const address = '9RM3h2a1Azs4Cn84sMGtJbujBSp9igjuRpYH63BKMtju'
 const address = '5dvVivApBmDuWUbsPNFPEGZ2FSJtjkY4JU8jcK8FTeZP' // XT's 0xf555f9e608e4f5d43bd3b38836b5401717c80721
 // const address = 'C1AhjxZydV1gibKfsDtyiSz4N776t5dMXrLd4jp8aAb8' // XT's 0xcC6c0FC4beaF823365eF9F445f668cdDE35b0F0c
 
 const address_MUMBAI_USDT = '0x8ba7E58bb14e56F5A2A1947C090a9Fcab1f98228'
-const address_MAIN_WrappedTRX = 'TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR'
-const address_SHASTA_USDT = 'TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs'
-const address_SHASTA_USDT_2 = 'TXXLsmZo5yzbwGZLoh7znccamTQyJx6Z74'
-const address_SHASTA_USDC = 'TSdZwNqpHofzP6BsBKGQUWdBeJphLmF6id'
-const address_SHASTA_USDJ = 'TLBaRhANQoJFTqre9Nf1mjuwNWjCJeYqUL'
-const address_SHASTA_LFC = 'TXEPrQSjNxZoM8LqKGGZL3yYiFmGodAHVw'
+const address_TRON_MAIN_WrappedTRX = 'TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR'
+const address_TRON_SHASTA_USDT = 'TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs'
+const address_TRON_SHASTA_USDT_2 = 'TXXLsmZo5yzbwGZLoh7znccamTQyJx6Z74'
+const address_TRON_SHASTA_USDC = 'TSdZwNqpHofzP6BsBKGQUWdBeJphLmF6id'
+const address_TRON_SHASTA_USDJ = 'TLBaRhANQoJFTqre9Nf1mjuwNWjCJeYqUL'
+const address_TRON_SHASTA_LFC = 'TXEPrQSjNxZoM8LqKGGZL3yYiFmGodAHVw'
 const address_SOLANA_Token = '9RM3h2a1Azs4Cn84sMGtJbujBSp9igjuRpYH63BKMtju'
 const address_Token = address_SOLANA_Token
 
@@ -154,15 +155,15 @@ try {
       to: address_Token,
       // value: "0x01",
       data: new Interface(wallet.provider.chainNamespace, ABI).encodeFunctionData('transfer', [address, 0]),
-      customData: {
+      gasPrice,
+      tron: {
+        transactionType: TronTransactionType.triggerSmartContract,
         function: 'transfer(address,uint256)',
         parameter: [
           { type: 'address', value: address },
           { type: 'uint256', value: 100 }
         ]
       },
-      gasPrice,
-      tron: { transactionType: TronTransactionType.triggerSmartContract },
       solana: { transaction: await getSolanaTransaction(SolanaTransactionType.transferToken, provider.connection, wallet.wallet as SolanaWallet, true, 10000000) }
     })
     console.log('<-- sendTransaction (Token):', transactionResponse)

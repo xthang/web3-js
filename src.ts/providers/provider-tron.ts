@@ -88,7 +88,7 @@ export class TronProvider implements Provider {
     if (signedTx.txID !== resp.txid) {
       throw new Error('@TODO: the returned txID did not match')
     }
-    console.log('<<<', resp)
+    // console.log('<<- TRON broadcast response:', resp)
 
     const respTrx = resp.transaction
 

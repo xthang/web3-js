@@ -107,14 +107,14 @@ export class TronWallet extends AbstractTronSigner implements IWallet {
       case TransactionType.triggerSmartContract:
         transaction = await this.provider!.tronWeb.transactionBuilder.triggerSmartContract(
           tx.to,
-          tx.customData.function,
+          tx.tron.function,
           {
             feeLimit: (tx.gasLimit as number) * (tx.gasPrice as number),
             callValue: typeof tx.value === 'string' ? parseInt(tx.value, 16) : tx.value,
-            tokenValue: tx.customData.tokenValue,
-            tokenId: tx.customData.tokenId
+            // tokenValue: tx.tron.tokenValue,
+            // tokenId: tx.tron.tokenId
           },
-          tx.customData.parameter,
+          tx.tron.parameter,
           tx.from ?? TRON_ADDRESS_PREFIX + this.addressHex.substring(2)
         )
         transaction = transaction.transaction
