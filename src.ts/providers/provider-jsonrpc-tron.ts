@@ -5,9 +5,10 @@ import { FetchRequest } from '../utils'
 import { PerformActionTransaction } from './abstract-provider'
 import { ChainNamespace, Networkish } from './network'
 import { TransactionRequest, copyRequest } from './provider'
-import { JsonRpcApiProviderOptions, JsonRpcProvider } from './provider-jsonrpc'
+import { JsonRpcApiProviderOptions } from './provider-jsonrpc'
+import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155'
 
-export class TronJsonRpcProvider extends JsonRpcProvider {
+export class TronJsonRpcProvider extends Eip155JsonRpcProvider {
   readonly chainNamespace = ChainNamespace.tron
 
   constructor(url: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {

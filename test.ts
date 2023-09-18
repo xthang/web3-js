@@ -52,11 +52,15 @@ const ABI = ABI_ERC20
 try {
   const network = await provider.getNetwork()
   console.log('<-- network: chainNamespace:', network.chainNamespace, '| chainId:', network.chainId, '| name:', network.name)
-  console.log('<-- eth_chainId:', await provider.send('eth_chainId', []))
+  if (chainNamespace !== ChainNamespace.solana) {
+    console.log('<-- eth_chainId:', await provider.send('eth_chainId', []))
+  }
   console.log('<-- blockTag:', await provider._getBlockTag())
   console.log('<-- getBlock:', await provider.getBlock('finalized')) // latest
   console.log('<-- getLatestBlockhash:', await provider.getLatestBlockhash())
-  console.log('<-- getAvatar:', await provider.getAvatar('eth'))
+  if (chainNamespace !== ChainNamespace.solana) {
+    console.log('<-- getAvatar:', await provider.getAvatar('eth'))
+  }
   console.log('<-- getBalance:', await provider.getBalance(address))
   if (chainNamespace === ChainNamespace.solana) {
     console.log(
@@ -66,7 +70,9 @@ try {
       })
     )
   }
-  console.log('<-- getTransactionCount:', await provider.getTransactionCount(address))
+  if (chainNamespace !== ChainNamespace.solana) {
+    console.log('<-- getTransactionCount:', await provider.getTransactionCount(address))
+  }
 
   // console.log(`--  computeAddress:`, computeAddress(pKey, ChainNamespace.solana))
 

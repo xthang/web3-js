@@ -4,43 +4,37 @@
  *  @_section: api/providers:Providers  [about-providers]
  */
 
-export { AbstractProvider as AbstractProvider, UnmanagedSubscriber } from "./abstract-provider";
+export { AbstractProvider as AbstractProvider, UnmanagedSubscriber } from './abstract-provider'
 
-export { AbstractSigner, VoidSigner } from "./abstract-signer";
-export { AbstractEip155Signer } from "./abstract-signer-eip155";
-export { AbstractSolanaSigner } from "./abstract-signer-solana";
-export { AbstractTronSigner, } from "./abstract-signer-tron";
+export { AbstractSigner, VoidSigner } from './abstract-signer'
+export { AbstractEip155Signer } from './abstract-signer-eip155'
+export { AbstractSolanaSigner } from './abstract-signer-solana'
+export { AbstractTronSigner } from './abstract-signer-tron'
 
-export { showThrottleMessage } from "./community";
+export { showThrottleMessage } from './community'
 
 // export { getDefaultProvider } from "./default-provider";
 
-export { EnsResolver } from "./ens-resolver";
+export { EnsResolver } from './ens-resolver'
 
-export { Network, ChainNamespace } from "./network";
+export { Network, ChainNamespace } from './network'
 
-export { NonceManager } from "./signer-noncemanager";
+export { NonceManager } from './signer-noncemanager'
 
-export {
-    NetworkPlugin,
-    GasCostPlugin,
-    EnsPlugin,
-    FeeDataNetworkPlugin,
-} from "./plugins-network";
+export { NetworkPlugin, GasCostPlugin, EnsPlugin, FeeDataNetworkPlugin } from './plugins-network'
 
 export {
-    Block,
-    FeeData,
-    Log,
-    TransactionReceipt,
-    TransactionResponse,
-
-    copyRequest,
-    //resolveTransactionRequest,
-} from "./provider";
+  Block,
+  FeeData,
+  Log,
+  TransactionReceipt,
+  TransactionResponse,
+  copyRequest
+  //resolveTransactionRequest,
+} from './provider'
 
 // export { FallbackProvider } from "./provider-fallback";
-export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from "./provider-jsonrpc"
+export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from './provider-jsonrpc'
 
 // export { BrowserProvider } from "./provider-browser";
 
@@ -62,18 +56,11 @@ export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from "./provider-j
 //     SocketEventSubscriber
 // } from "./provider-socket";
 
-export type {
-    Subscription, Subscriber,
-    AbstractProviderPlugin,
-    PerformActionFilter, PerformActionTransaction, PerformActionRequest,
-} from "./abstract-provider"
+export type { Subscription, Subscriber, AbstractProviderPlugin, PerformActionFilter, PerformActionTransaction, PerformActionRequest } from './abstract-provider'
 
-export type { ContractRunner } from "./contracts";
+export type { ContractRunner } from './contracts'
 
-export type {
-    BlockParams, LogParams, TransactionReceiptParams,
-    TransactionResponseParams,
-} from "./formatting";
+export type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting'
 
 /*
 export type {
@@ -84,35 +71,37 @@ export type {
     AvatarLinkageType, AvatarLinkage, AvatarResult
 } from "./ens-resolver";
 */
-export type { Networkish } from "./network";
+export type { Networkish } from './network'
 
-export type { GasCostParameters } from "./plugins-network";
+export type { GasCostParameters } from './plugins-network'
 
 export type {
-    BlockTag,
-    TransactionRequest, PreparedTransactionRequest,
-    EventFilter, Filter, FilterByBlockHash, OrphanFilter, ProviderEvent,
-    TopicFilter,
-    Provider,
-    MinedBlock, MinedTransactionResponse
-} from "./provider";
+  BlockTag,
+  TransactionRequest,
+  PreparedTransactionRequest,
+  EventFilter,
+  Filter,
+  FilterByBlockHash,
+  OrphanFilter,
+  ProviderEvent,
+  TopicFilter,
+  Provider,
+  MinedBlock,
+  MinedTransactionResponse
+} from './provider'
 
 // export type {
 //     DebugEventBrowserProvider, Eip1193Provider
 // } from "./provider-browser";
 
-export type {
-    JsonRpcPayload, JsonRpcResult, JsonRpcError,
-    JsonRpcApiProviderOptions,
-    JsonRpcTransactionRequest,
-} from "./provider-jsonrpc";
+export type { JsonRpcPayload, JsonRpcResult, JsonRpcError, JsonRpcApiProviderOptions, JsonRpcTransactionRequest } from './provider-jsonrpc'
 
 // export type {
 //     WebSocketCreator, WebSocketLike
 // } from "./provider-websocket";
 
+export { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155'
 export { TronProvider } from './provider-tron'
 export { SolanaJsonRpcProvider } from './provider-jsonrpc-solana'
 
-export type { Signer } from "./signer";
-
+export type { Signer } from './signer'

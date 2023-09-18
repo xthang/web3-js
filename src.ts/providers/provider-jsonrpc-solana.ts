@@ -1,18 +1,17 @@
-import { isPromise } from 'util/types'
 import { Connection, Finality, Transaction, TransactionResponse as SolanaWeb3TransactionResponse } from '@solana/web3.js'
 import bs58 from 'bs58'
 
-import { AddressLike, convertToHexAddress, resolveAddress } from '../address'
-import { TRON_ADDRESS_PREFIX } from '../constants/addresses'
+import { AddressLike } from '../address'
 import { FetchRequest, getBigInt, resolveProperties } from '../utils'
 import { PerformActionRequest, PerformActionTransaction } from './abstract-provider'
 import { BlockParams } from './formatting'
 import { ChainNamespace, Networkish } from './network'
 import { Network } from './network'
-import { Block, BlockTag, FeeData, TransactionReceipt, TransactionRequest, TransactionResponse, copyRequest } from './provider'
-import { JsonRpcApiProviderOptions, JsonRpcProvider } from './provider-jsonrpc'
+import { Block, BlockTag, FeeData, TransactionReceipt, TransactionRequest, TransactionResponse } from './provider'
+import { JsonRpcApiProviderOptions } from './provider-jsonrpc'
+import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155'
 
-export class SolanaJsonRpcProvider extends JsonRpcProvider {
+export class SolanaJsonRpcProvider extends Eip155JsonRpcProvider {
   readonly chainNamespace = ChainNamespace.solana
 
   readonly connection: Connection
@@ -26,48 +25,7 @@ export class SolanaJsonRpcProvider extends JsonRpcProvider {
   }
 
   _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction> {
-    const request = <PerformActionTransaction>copyRequest(_request)
-
-    const promises: Array<Promise<void>> = []
-    ;['to', 'from'].forEach((key) => {
-      if ((<any>request)[key] == null) {
-        return
-      }
-
-      // for call request: addr is base58
-      const addr = resolveAddress((<any>request)[key], this.chainNamespace)
-      if (isPromise(addr)) {
-        promises.push(
-          (async () => {
-            ;(<any>request)[key] = '0x' + TRON_ADDRESS_PREFIX + convertToHexAddress(await addr, this.chainNamespace).substring(2)
-          })()
-        )
-      } else {
-        ;(<any>request)[key] = '0x' + TRON_ADDRESS_PREFIX + convertToHexAddress(addr, this.chainNamespace).substring(2)
-      }
-    })
-
-    if (request.blockTag != null) {
-      const blockTag = this._getBlockTag(request.blockTag)
-      if (isPromise(blockTag)) {
-        promises.push(
-          (async function () {
-            request.blockTag = await blockTag
-          })()
-        )
-      } else {
-        request.blockTag = blockTag
-      }
-    }
-
-    if (promises.length) {
-      return (async function () {
-        await Promise.all(promises)
-        return request
-      })()
-    }
-
-    return request
+    throw new Error('Method not implemented.')
   }
 
   getRpcRequest(req: PerformActionRequest | { method: 'getLatestBlockhash' }): null | { method: string; args: Array<any> } {

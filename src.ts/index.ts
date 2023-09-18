@@ -6,5 +6,5 @@
  *  @_navTitle: API
  */
 
-export * from "./ethers";
-export * as ethers from "./ethers";
+export * from './ethers.js'
+export * as ethers from './ethers.js'
