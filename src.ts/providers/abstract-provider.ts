@@ -60,7 +60,7 @@ const BN_2 = BigInt(2)
 
 const MAX_CCIP_REDIRECTS = 10
 
-function isPromise<T = any>(value: any): value is Promise<T> {
+export function isPromise<T = any>(value: any): value is Promise<T> {
   return value && typeof value.then === 'function'
 }
 

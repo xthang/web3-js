@@ -2,7 +2,7 @@
   "name": "@web3-x/web3.js",
   "description": "A complete and compact Ethereum library, for dapps, wallets and any other tools.",
   "author": "Richard Moore <me@ricmoo.com> + Thang.X",
-  "version": "6.3.1-beta.7",
+  "version": "6.3.1-beta.8",
   "homepage": "https://github.com/xthang/web3-js",
   "repository": {
     "type": "git",
