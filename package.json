@@ -2,7 +2,7 @@
   "name": "@web3-x/web3.js",
   "description": "A complete and compact Ethereum library, for dapps, wallets and any other tools.",
   "author": "Richard Moore <me@ricmoo.com> + Thang.X",
-  "version": "6.3.1-beta.5",
+  "version": "6.3.1-beta.6",
   "homepage": "https://github.com/xthang/web3-js",
   "repository": {
     "type": "git",
@@ -73,6 +73,7 @@
     "build-docs": "echo 'foo'",
     "build-types": "tsc --project tsconfig.types.json && cp ./output/post-build/types/* ./types/",
     "clean": "rm -rf dist lib.esm lib.commonjs types",
+    "prepublishOnly": "npm run build-all",
     "postpublish": "node lib.esm/_admin/create-release.js",
     "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
     "test": "npm run test-esm",
