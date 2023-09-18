@@ -1,14 +1,14 @@
-import { Interface, Typed } from '../abi/index'
-import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from '../abi/index'
-import { resolveAddress } from '../address/index'
+import { Interface, Typed } from '../abi/index.js'
+import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from '../abi/index.js'
+import { resolveAddress } from '../address/index.js'
 // import from provider.ts instead of index.ts to prevent circular dep
 // from EtherscanProvider
-import type { Addressable } from '../address/index'
-import { BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter, ChainNamespace } from '../providers/index'
-import { copyRequest, Log, TransactionResponse } from '../providers/provider'
-import { defineProperties, isCallException, isHexString, resolveProperties, makeError, assert, assertArgument } from '../utils/index'
-import type { EventEmitterable, Listener } from '../utils/index'
-import { TronTransactionType } from '../wallet'
+import type { Addressable } from '../address/index.js'
+import { BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter, ChainNamespace } from '../providers/index.js'
+import { copyRequest, Log, TransactionResponse } from '../providers/provider.js'
+import { defineProperties, isCallException, isHexString, resolveProperties, makeError, assert, assertArgument } from '../utils/index.js'
+import type { EventEmitterable, Listener } from '../utils/index.js'
+import { TronTransactionType } from '../wallet/index.js'
 import type {
   BaseContractMethod,
   ContractEventName,
@@ -20,8 +20,8 @@ import type {
   ContractTransaction,
   DeferredTopicFilter,
   WrappedFallback
-} from './types'
-import { ContractEventPayload, ContractUnknownEventPayload, ContractTransactionResponse, EventLog } from './wrappers'
+} from './types.js'
+import { ContractEventPayload, ContractUnknownEventPayload, ContractTransactionResponse, EventLog } from './wrappers.js'
 
 const BN_0 = BigInt(0)
 

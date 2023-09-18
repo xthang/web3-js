@@ -1,12 +1,12 @@
 import { isPromise } from 'util/types'
-import { AddressLike, convertToHexAddress, resolveAddress } from '../address'
-import { TRON_ADDRESS_PREFIX } from '../constants/addresses'
-import { FetchRequest } from '../utils'
-import { PerformActionTransaction } from './abstract-provider'
-import { ChainNamespace, Networkish } from './network'
-import { TransactionRequest, copyRequest } from './provider'
-import { JsonRpcApiProviderOptions } from './provider-jsonrpc'
-import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155'
+import { AddressLike, convertToHexAddress, resolveAddress } from '../address/index.js'
+import { TRON_ADDRESS_PREFIX } from '../constants/addresses.js'
+import { FetchRequest } from '../utils/index.js'
+import { PerformActionTransaction } from './abstract-provider.js'
+import { ChainNamespace, Networkish } from './network.js'
+import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155.js'
+import { JsonRpcApiProviderOptions } from './provider-jsonrpc.js'
+import { TransactionRequest, copyRequest } from './provider.js'
 
 export class TronJsonRpcProvider extends Eip155JsonRpcProvider {
   readonly chainNamespace = ChainNamespace.tron

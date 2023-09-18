@@ -1,5 +1,5 @@
-import { SigningKey } from '../crypto'
-import { AbstractSigner } from '../providers'
+import { SigningKey } from '../crypto/index.js'
+import { AbstractSigner } from '../providers/index.js'
 
 export interface IWallet extends AbstractSigner {
   // readonly provider: P

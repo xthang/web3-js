@@ -1,10 +1,10 @@
-import { resolveAddressToHex, getAddress } from '../address'
-import { SigningKey } from '../crypto/index'
-import { hashMessage, TypedDataDomain, TypedDataField, TypedDataEncoder } from '../hash'
-import { AbstractEip155Signer, ChainNamespace, Provider, TransactionRequest } from '../providers/index'
-import { Transaction, TransactionLike, computeAddress } from '../transaction'
-import { assert, assertArgument, resolveProperties } from '../utils'
-import { IWallet } from './base'
+import { resolveAddressToHex, getAddress } from '../address/index.js'
+import { SigningKey } from '../crypto/index.js'
+import { hashMessage, TypedDataDomain, TypedDataField, TypedDataEncoder } from '../hash/index.js'
+import { AbstractEip155Signer, ChainNamespace, Provider, TransactionRequest } from '../providers/index.js'
+import { Transaction, TransactionLike, computeAddress } from '../transaction/index.js'
+import { assert, assertArgument, resolveProperties } from '../utils/index.js'
+import { IWallet } from './base.js'
 
 /**
  *  A **Wallet** manages a single private key which is used to sign

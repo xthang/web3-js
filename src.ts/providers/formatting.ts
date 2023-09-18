@@ -4,8 +4,8 @@
  *  @_section: api/providers/formatting:Formatting  [provider-formatting]
  */
 
-import type { Signature } from "../crypto/index";
-import type { AccessList } from "../transaction/index";
+import type { Signature } from '../crypto/index.js'
+import type { AccessList } from '../transaction/index.js'
 
 /*
 export interface TransactionRequest {
@@ -64,79 +64,76 @@ export interface PreparedTransactionRequest {
 }
 */
 
-
 //////////////////////
 // Block
 
 export interface BlockParams {
-    hash?: null | string;
+  hash?: null | string
 
-    number: number;
-    timestamp: number;
+  number: number
+  timestamp: number
 
-    parentHash: string;
+  parentHash: string
 
-    nonce: string;
-    difficulty: bigint;
+  nonce: string
+  difficulty: bigint
 
-    gasLimit: bigint;
-    gasUsed: bigint;
+  gasLimit: bigint
+  gasUsed: bigint
 
-    miner: string;
-    extraData: string;
+  miner: string
+  extraData: string
 
-    baseFeePerGas: null | bigint;
+  baseFeePerGas: null | bigint
 
-    transactions: ReadonlyArray<string | TransactionResponseParams>;
-};
-
+  transactions: ReadonlyArray<string | TransactionResponseParams>
+}
 
 //////////////////////
 // Log
 
 export interface LogParams {
-    transactionHash: string;
-    blockHash: string;
-    blockNumber: number;
+  transactionHash: string
+  blockHash: string
+  blockNumber: number
 
-    removed: boolean;
+  removed: boolean
 
-    address: string;
-    data: string;
+  address: string
+  data: string
 
-    topics: ReadonlyArray<string>;
+  topics: ReadonlyArray<string>
 
-    index: number;
-    transactionIndex: number;
+  index: number
+  transactionIndex: number
 }
-
 
 //////////////////////
 // Transaction Receipt
 
 export interface TransactionReceiptParams {
-    to: null | string;
-    from: string;
-    contractAddress: null | string;
+  to: null | string
+  from: string
+  contractAddress: null | string
 
-    hash: string;
-    index: number;
+  hash: string
+  index: number
 
-    blockHash: string;
-    blockNumber: number;
+  blockHash: string
+  blockNumber: number
 
-    logsBloom: string;
-    logs: ReadonlyArray<LogParams>;
+  logsBloom: string
+  logs: ReadonlyArray<LogParams>
 
-    gasUsed: bigint;
-    cumulativeGasUsed: bigint;
-    gasPrice?: null | bigint;
-    effectiveGasPrice?: null | bigint;
+  gasUsed: bigint
+  cumulativeGasUsed: bigint
+  gasPrice?: null | bigint
+  effectiveGasPrice?: null | bigint
 
-    type: number;
-    //byzantium: boolean;
-    status: null | number;
-    root: null | string;
+  type: number
+  //byzantium: boolean;
+  status: null | number
+  root: null | string
 }
 
 /*
@@ -153,39 +150,35 @@ export interface ByzantiumTransactionReceipt {
 }
 */
 
-
-
 //////////////////////
 // Transaction Response
 
 export interface TransactionResponseParams {
-    blockNumber: null | number;
-    blockHash: null | string;
+  blockNumber: null | number
+  blockHash: null | string
 
-    hash: string;
-    index: number;
+  hash: string
+  index: number
 
-    type: number;
+  type: number
 
-    to: null | string;
-    from: string;
+  to: null | string
+  from: string
 
-    nonce: number;
+  nonce: number
 
-    gasLimit: bigint;
+  gasLimit: bigint
 
-    gasPrice: bigint;
+  gasPrice: bigint
 
-    maxPriorityFeePerGas: null | bigint;
-    maxFeePerGas: null | bigint;
+  maxPriorityFeePerGas: null | bigint
+  maxFeePerGas: null | bigint
 
-    data: string;
-    value: bigint;
-    chainId: bigint;
+  data: string
+  value: bigint
+  chainId: bigint
 
-    signature: Signature;
+  signature: Signature
 
-    accessList: null | AccessList;
-};
-
-
+  accessList: null | AccessList
+}

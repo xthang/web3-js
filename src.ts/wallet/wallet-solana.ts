@@ -1,12 +1,12 @@
 import * as ed25519 from '@noble/ed25519'
 import { hexToBytes } from '@noble/hashes/utils'
 import { Keypair } from '@solana/web3.js'
-import { SigningKey } from '../crypto'
-import { TypedDataDomain, TypedDataField } from '../hash'
-import { AbstractSolanaSigner, ChainNamespace, SolanaJsonRpcProvider, TransactionRequest } from '../providers'
-import { computeAddress } from '../transaction'
-import { assertArgument } from '../utils'
-import { IWallet } from './base'
+import { SigningKey } from '../crypto/index.js'
+import { TypedDataDomain, TypedDataField } from '../hash/index.js'
+import { AbstractSolanaSigner, ChainNamespace, SolanaJsonRpcProvider, TransactionRequest } from '../providers/index.js'
+import { computeAddress } from '../transaction/index.js'
+import { assertArgument } from '../utils/index.js'
+import { IWallet } from './base.js'
 
 export enum TransactionType {
   transferSOL = 1,

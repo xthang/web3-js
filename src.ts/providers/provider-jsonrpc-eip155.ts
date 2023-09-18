@@ -9,12 +9,12 @@
 
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
-import { AbiCoder } from '../abi'
-import { accessListify, TransactionLike } from '../transaction'
-import { toQuantity, getBigInt, hexlify, makeError, isHexString } from '../utils'
-import { PerformActionRequest } from './abstract-provider'
-import { TransactionRequest } from './provider'
-import { JsonRpcError, JsonRpcPayload, JsonRpcProvider, JsonRpcTransactionRequest } from './provider-jsonrpc'
+import { AbiCoder } from '../abi/index.js'
+import { accessListify, TransactionLike } from '../transaction/index.js'
+import { toQuantity, getBigInt, hexlify, makeError, isHexString } from '../utils/index.js'
+import { PerformActionRequest } from './abstract-provider.js'
+import { JsonRpcError, JsonRpcPayload, JsonRpcProvider, JsonRpcTransactionRequest } from './provider-jsonrpc.js'
+import { TransactionRequest } from './provider.js'
 
 function getLowerCase(value: string): string {
   if (value) {

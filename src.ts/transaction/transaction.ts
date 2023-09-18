@@ -1,12 +1,12 @@
-import { formatHexAddress, getAddress } from '../address/index'
-import { keccak256_hex, Signature, SigningKey } from '../crypto/index'
-import type { SignatureLike } from '../crypto/index'
-import { ChainNamespace } from '../providers/network'
-import { concat, decodeRlp, encodeRlp, getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue } from '../utils/index'
-import type { BigNumberish, BytesLike } from '../utils/index'
-import { accessListify } from './accesslist'
-import { recoverAddress } from './address'
-import type { AccessList, AccessListish } from './index'
+import { formatHexAddress, getAddress } from '../address/index.js'
+import { keccak256_hex, Signature, SigningKey } from '../crypto/index.js'
+import type { SignatureLike } from '../crypto/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { concat, decodeRlp, encodeRlp, getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue } from '../utils/index.js'
+import type { BigNumberish, BytesLike } from '../utils/index.js'
+import { accessListify } from './accesslist.js'
+import { recoverAddress } from './address.js'
+import type { AccessList, AccessListish } from './index.js'
 
 const BN_0 = BigInt(0)
 const BN_2 = BigInt(2)

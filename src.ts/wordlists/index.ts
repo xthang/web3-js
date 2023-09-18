@@ -17,10 +17,10 @@
  *
  *  @_section: api/wordlists:Wordlists [about-wordlists]
  */
-export { Wordlist } from "./wordlist";
-export { LangEn } from "./lang-en";
+export { Wordlist } from './wordlist.js'
+export { LangEn } from './lang-en.js'
 
-export { WordlistOwl } from "./wordlist-owl";
-export { WordlistOwlA } from "./wordlist-owla";
+export { WordlistOwl } from './wordlist-owl.js'
+export { WordlistOwlA } from './wordlist-owla.js'
 
-export { wordlists } from "./wordlists";
+export { wordlists } from './wordlists.js'

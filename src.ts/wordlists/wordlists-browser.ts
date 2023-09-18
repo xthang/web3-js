@@ -1,8 +1,7 @@
+import { LangEn } from './lang-en.js'
 
-import { LangEn } from "./lang-en";
-
-import type { Wordlist } from "./wordlist";
+import type { Wordlist } from './wordlist.js'
 
 export const wordlists: Record<string, Wordlist> = {
-  en: LangEn.wordlist(),
-};
+  en: LangEn.wordlist()
+}

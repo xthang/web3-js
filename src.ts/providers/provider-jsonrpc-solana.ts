@@ -1,15 +1,15 @@
 import { Connection, Finality, Transaction, TransactionResponse as SolanaWeb3TransactionResponse } from '@solana/web3.js'
 import bs58 from 'bs58'
 
-import { AddressLike } from '../address'
-import { FetchRequest, getBigInt, resolveProperties } from '../utils'
-import { PerformActionRequest, PerformActionTransaction } from './abstract-provider'
-import { BlockParams } from './formatting'
-import { ChainNamespace, Networkish } from './network'
-import { Network } from './network'
-import { Block, BlockTag, FeeData, TransactionReceipt, TransactionRequest, TransactionResponse } from './provider'
-import { JsonRpcApiProviderOptions } from './provider-jsonrpc'
-import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155'
+import { AddressLike } from '../address/index.js'
+import { FetchRequest, getBigInt, resolveProperties } from '../utils/index.js'
+import { PerformActionRequest, PerformActionTransaction } from './abstract-provider.js'
+import { BlockParams } from './formatting.js'
+import { ChainNamespace, Networkish } from './network.js'
+import { Network } from './network.js'
+import { Eip155JsonRpcProvider } from './provider-jsonrpc-eip155.js'
+import { JsonRpcApiProviderOptions } from './provider-jsonrpc.js'
+import { Block, BlockTag, FeeData, TransactionReceipt, TransactionRequest, TransactionResponse } from './provider.js'
 
 export class SolanaJsonRpcProvider extends Eip155JsonRpcProvider {
   readonly chainNamespace = ChainNamespace.solana

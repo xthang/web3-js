@@ -3,13 +3,13 @@
  *
  *  @_subsection: api/wallet:HD Wallets  [hd-wallets]
  */
-import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from '../crypto/index'
-import type { ProgressCallback } from '../crypto/index'
-import { TypedDataDomain, TypedDataField } from '../hash'
-import { AbstractSigner, SolanaJsonRpcProvider, TransactionRequest, TransactionResponse, TronProvider, VoidSigner } from '../providers/index'
-import type { Provider } from '../providers/index'
-import { ChainNamespace } from '../providers/network'
-import { TransactionLike, computeAddress } from '../transaction/index'
+import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from '../crypto/index.js'
+import type { ProgressCallback } from '../crypto/index.js'
+import { TypedDataDomain, TypedDataField } from '../hash/index.js'
+import { AbstractSigner, SolanaJsonRpcProvider, TransactionRequest, TransactionResponse, TronProvider, VoidSigner } from '../providers/index.js'
+import type { Provider } from '../providers/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { TransactionLike, computeAddress } from '../transaction/index.js'
 import {
   concat,
   dataSlice,
@@ -26,17 +26,17 @@ import {
   assertPrivate,
   assert,
   assertArgument
-} from '../utils/index'
-import type { BytesLike, Numeric } from '../utils/index'
-import type { Wordlist } from '../wordlists/index'
-import { LangEn } from '../wordlists/lang-en'
-import { IWallet } from './base'
-import { encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore'
-import type { KeystoreAccount } from './json-keystore'
-import { Mnemonic } from './mnemonic'
-import { Eip155Wallet } from './wallet-eip155'
-import { SolanaWallet } from './wallet-solana'
-import { TronWallet } from './wallet-tron'
+} from '../utils/index.js'
+import type { BytesLike, Numeric } from '../utils/index.js'
+import type { Wordlist } from '../wordlists/index.js'
+import { LangEn } from '../wordlists/lang-en.js'
+import { IWallet } from './base.js'
+import { encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore.js'
+import type { KeystoreAccount } from './json-keystore.js'
+import { Mnemonic } from './mnemonic.js'
+import { Eip155Wallet } from './wallet-eip155.js'
+import { SolanaWallet } from './wallet-solana.js'
+import { TronWallet } from './wallet-tron.js'
 
 /**
  *  The default derivation path for Ethereum HD Nodes. (i.e. ``"m/44'/60'/0'/0/0"``)

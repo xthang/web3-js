@@ -1,9 +1,9 @@
-import { TransactionLike } from '../transaction/index'
-import { resolveProperties } from '../utils/index'
-import { checkProvider } from './abstract-signer'
-import { TransactionResponse, copyRequest } from './provider'
-import type { TransactionRequest } from './provider'
-import { AbstractSigner, SolanaJsonRpcProvider } from './index'
+import { TransactionLike } from '../transaction/index.js'
+import { resolveProperties } from '../utils/index.js'
+import { checkProvider } from './abstract-signer.js'
+import { TransactionResponse, copyRequest } from './provider.js'
+import type { TransactionRequest } from './provider.js'
+import { AbstractSigner, SolanaJsonRpcProvider } from './index.js'
 
 async function populate(signer: AbstractSolanaSigner, tx: TransactionRequest): Promise<TransactionLike<string>> {
   const pop: any = copyRequest(tx)

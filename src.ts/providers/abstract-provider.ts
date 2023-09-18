@@ -14,12 +14,12 @@
 
 import bs58 from 'bs58'
 
-import { getAddress, resolveAddress } from '../address/index'
-import type { Addressable, AddressLike } from '../address/index'
-import { ZeroHash } from '../constants/index'
-import { Contract } from '../contract/index'
-import { namehash } from '../hash/index'
-import { Transaction } from '../transaction/index'
+import { getAddress, resolveAddress } from '../address/index.js'
+import type { Addressable, AddressLike } from '../address/index.js'
+import { ZeroHash } from '../constants/index.js'
+import { Contract } from '../contract/index.js'
+import { namehash } from '../hash/index.js'
+import { Transaction } from '../transaction/index.js'
 import {
   concat,
   dataLength,
@@ -41,16 +41,16 @@ import {
   EventPayload,
   resolveProperties,
   toUtf8String
-} from '../utils/index'
-import type { BigNumberish, BytesLike, Listener } from '../utils/index'
-import { EnsResolver } from './ens-resolver'
-import { formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse } from './format'
-import type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting'
-import { ChainNamespace, Network } from './network'
-import type { Networkish } from './network'
-import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from './provider'
-import type { BlockTag, EventFilter, Filter, FilterByBlockHash, OrphanFilter, PreparedTransactionRequest, Provider, ProviderEvent, TransactionRequest } from './provider'
-import { PollingBlockSubscriber, PollingEventSubscriber, PollingOrphanSubscriber, PollingTransactionSubscriber } from './subscriber-polling'
+} from '../utils/index.js'
+import type { BigNumberish, BytesLike, Listener } from '../utils/index.js'
+import { EnsResolver } from './ens-resolver.js'
+import { formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse } from './format.js'
+import type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting.js'
+import { ChainNamespace, Network } from './network.js'
+import type { Networkish } from './network.js'
+import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from './provider.js'
+import type { BlockTag, EventFilter, Filter, FilterByBlockHash, OrphanFilter, PreparedTransactionRequest, Provider, ProviderEvent, TransactionRequest } from './provider.js'
+import { PollingBlockSubscriber, PollingEventSubscriber, PollingOrphanSubscriber, PollingTransactionSubscriber } from './subscriber-polling.js'
 //import type { MaxPriorityFeePlugin } from "./plugins-network";
 
 type Timer = ReturnType<typeof setTimeout>

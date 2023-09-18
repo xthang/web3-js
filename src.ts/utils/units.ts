@@ -19,22 +19,12 @@
  *
  *  @_subsection api/utils:Unit Conversion  [about-units]
  */
-import { assertArgument } from "./errors";
-import { FixedNumber } from "./fixednumber";
-import { getNumber } from "./maths";
+import type { BigNumberish, Numeric } from '../utils/index.js'
+import { assertArgument } from './errors.js'
+import { FixedNumber } from './fixednumber.js'
+import { getNumber } from './maths.js'
 
-import type { BigNumberish, Numeric } from "../utils/index";
-
-
-const names = [
-    "wei",
-    "kwei",
-    "mwei",
-    "gwei",
-    "szabo",
-    "finney",
-    "ether",
-];
+const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether']
 
 /**
  *  Converts %%value%% into a //decimal string//, assuming %%unit%% decimal
@@ -43,16 +33,16 @@ const names = [
  *
  */
 export function formatUnits(value: BigNumberish, unit?: string | Numeric): string {
-    let decimals = 18;
-    if (typeof(unit) === "string") {
-        const index = names.indexOf(unit);
-        assertArgument(index >= 0, "invalid unit", "unit", unit);
-        decimals = 3 * index;
-    } else if (unit != null) {
-        decimals = getNumber(unit, "unit");
-    }
+  let decimals = 18
+  if (typeof unit === 'string') {
+    const index = names.indexOf(unit)
+    assertArgument(index >= 0, 'invalid unit', 'unit', unit)
+    decimals = 3 * index
+  } else if (unit != null) {
+    decimals = getNumber(unit, 'unit')
+  }
 
-    return FixedNumber.fromValue(value, decimals, { decimals }).toString();
+  return FixedNumber.fromValue(value, decimals, { decimals }).toString()
 }
 
 /**
@@ -61,25 +51,25 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
  *  or the name of a unit (e.g. ``"gwei"`` for 9 decimal places).
  */
 export function parseUnits(value: string, unit?: string | Numeric): bigint {
-    assertArgument(typeof(value) === "string", "value must be a string", "value", value);
+  assertArgument(typeof value === 'string', 'value must be a string', 'value', value)
 
-    let decimals = 18;
-    if (typeof(unit) === "string") {
-        const index = names.indexOf(unit);
-        assertArgument(index >= 0, "invalid unit", "unit", unit);
-        decimals = 3 * index;
-    } else if (unit != null) {
-        decimals = getNumber(unit, "unit");
-    }
+  let decimals = 18
+  if (typeof unit === 'string') {
+    const index = names.indexOf(unit)
+    assertArgument(index >= 0, 'invalid unit', 'unit', unit)
+    decimals = 3 * index
+  } else if (unit != null) {
+    decimals = getNumber(unit, 'unit')
+  }
 
-    return FixedNumber.fromString(value, { decimals }).value;
+  return FixedNumber.fromString(value, { decimals }).value
 }
 
 /**
  *  Converts %%value%% into a //decimal string// using 18 decimal places.
  */
 export function formatEther(wei: BigNumberish): string {
-    return formatUnits(wei, 18);
+  return formatUnits(wei, 18)
 }
 
 /**
@@ -87,5 +77,5 @@ export function formatEther(wei: BigNumberish): string {
  *  decimal places.
  */
 export function parseEther(ether: string): bigint {
-    return parseUnits(ether, 18);
+  return parseUnits(ether, 18)
 }

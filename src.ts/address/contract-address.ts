@@ -1,12 +1,7 @@
-import { keccak256 } from "../crypto/index";
-import {
-    concat, dataSlice, getBigInt, getBytes, encodeRlp, assertArgument
-} from "../utils/index";
-
-import { formatHexAddress } from "./address";
-
-import type { BigNumberish, BytesLike } from "../utils/index";
-
+import { keccak256 } from '../crypto/index.js'
+import { concat, dataSlice, getBigInt, getBytes, encodeRlp, assertArgument } from '../utils/index.js'
+import type { BigNumberish, BytesLike } from '../utils/index.js'
+import { formatHexAddress } from './address.js'
 
 // http://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
 
@@ -28,20 +23,20 @@ import type { BigNumberish, BytesLike } from "../utils/index";
  *    getCreateAddress({ from, nonce });
  *    //_result:
  */
-export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): string {
-    const from = formatHexAddress(tx.from);
-    const nonce = getBigInt(tx.nonce, "tx.nonce");
+export function getCreateAddress(tx: { from: string; nonce: BigNumberish }): string {
+  const from = formatHexAddress(tx.from)
+  const nonce = getBigInt(tx.nonce, 'tx.nonce')
 
-    let nonceHex = nonce.toString(16);
-    if (nonceHex === "0") {
-        nonceHex = "0x";
-    } else if (nonceHex.length % 2) {
-        nonceHex = "0x0" + nonceHex;
-    } else {
-        nonceHex = "0x" + nonceHex;
-    }
+  let nonceHex = nonce.toString(16)
+  if (nonceHex === '0') {
+    nonceHex = '0x'
+  } else if (nonceHex.length % 2) {
+    nonceHex = '0x0' + nonceHex
+  } else {
+    nonceHex = '0x' + nonceHex
+  }
 
-    return formatHexAddress(dataSlice(keccak256(encodeRlp([ from, nonceHex ])), 12));
+  return formatHexAddress(dataSlice(keccak256(encodeRlp([from, nonceHex])), 12))
 }
 
 /**
@@ -68,13 +63,13 @@ export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): str
  *    //_result:
  */
 export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash: BytesLike): string {
-    const from = formatHexAddress(_from);
-    const salt = getBytes(_salt, "salt");
-    const initCodeHash = getBytes(_initCodeHash, "initCodeHash");
+  const from = formatHexAddress(_from)
+  const salt = getBytes(_salt, 'salt')
+  const initCodeHash = getBytes(_initCodeHash, 'initCodeHash')
 
-    assertArgument(salt.length === 32, "salt must be 32 bytes", "salt", _salt);
+  assertArgument(salt.length === 32, 'salt must be 32 bytes', 'salt', _salt)
 
-    assertArgument(initCodeHash.length === 32, "initCodeHash must be 32 bytes", "initCodeHash", _initCodeHash);
+  assertArgument(initCodeHash.length === 32, 'initCodeHash must be 32 bytes', 'initCodeHash', _initCodeHash)
 
-    return formatHexAddress(dataSlice(keccak256(concat([ "0xff", from, salt, initCodeHash ])), 12))
+  return formatHexAddress(dataSlice(keccak256(concat(['0xff', from, salt, initCodeHash])), 12))
 }

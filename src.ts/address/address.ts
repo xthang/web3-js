@@ -1,8 +1,8 @@
 import TronWeb from 'tronweb'
-import { keccak256, sha256 } from '../crypto/index'
-import { ChainNamespace } from '../providers/network'
-import { DataHexString, HexString } from '../utils/data'
-import { assertArgument, decodeBase58, encodeBase58 } from '../utils/index'
+import { keccak256, sha256 } from '../crypto/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { DataHexString, HexString } from '../utils/data.js'
+import { assertArgument, decodeBase58, encodeBase58 } from '../utils/index.js'
 
 const BN_0 = BigInt(0)
 const BN_36 = BigInt(36)

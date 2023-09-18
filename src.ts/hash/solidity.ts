@@ -1,73 +1,76 @@
-import { convertToHexAddress } from "../address/index";
-import {
-    keccak256_hex as _keccak256, sha256 as _sha256
-} from "../crypto/index";
-import { ChainNamespace } from "../providers/network";
-import {
-    concat, dataLength, getBytes, hexlify, toBeArray, toTwos, toUtf8Bytes, zeroPadBytes, zeroPadValue,
-    assertArgument
-} from "../utils/index";
+import { convertToHexAddress } from '../address/index.js'
+import { keccak256_hex as _keccak256, sha256 as _sha256 } from '../crypto/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { concat, dataLength, getBytes, hexlify, toBeArray, toTwos, toUtf8Bytes, zeroPadBytes, zeroPadValue, assertArgument } from '../utils/index.js'
 
-
-const regexBytes = new RegExp("^bytes([0-9]+)$");
-const regexNumber = new RegExp("^(u?int)([0-9]*)$");
-const regexArray = new RegExp("^(.*)\\[([0-9]*)\\]$");
-
+const regexBytes = new RegExp('^bytes([0-9]+)$')
+const regexNumber = new RegExp('^(u?int)([0-9]*)$')
+const regexArray = new RegExp('^(.*)\\[([0-9]*)\\]$')
 
 function _pack(chainNamespace: ChainNamespace, type: string, value: any, isArray?: boolean): Uint8Array {
-    switch(type) {
-        case "address":
-            if (isArray) { return getBytes(zeroPadValue(value, 32)); }
-            return getBytes(convertToHexAddress(value, chainNamespace));
-        case "string":
-            return toUtf8Bytes(value);
-        case "bytes":
-            return getBytes(value);
-        case "bool":
-            value = (!!value ? "0x01": "0x00");
-            if (isArray) { return getBytes(zeroPadValue(value, 32)); }
-            return getBytes(value);
+  switch (type) {
+    case 'address':
+      if (isArray) {
+        return getBytes(zeroPadValue(value, 32))
+      }
+      return getBytes(convertToHexAddress(value, chainNamespace))
+    case 'string':
+      return toUtf8Bytes(value)
+    case 'bytes':
+      return getBytes(value)
+    case 'bool':
+      value = value ? '0x01' : '0x00'
+      if (isArray) {
+        return getBytes(zeroPadValue(value, 32))
+      }
+      return getBytes(value)
+  }
+
+  let match = type.match(regexNumber)
+  if (match) {
+    const signed = match[1] === 'int'
+    let size = parseInt(match[2] || '256')
+
+    assertArgument((!match[2] || match[2] === String(size)) && size % 8 === 0 && size !== 0 && size <= 256, 'invalid number type', 'type', type)
+
+    if (isArray) {
+      size = 256
     }
 
-    let match =  type.match(regexNumber);
-    if (match) {
-        let signed = (match[1] === "int");
-        let size = parseInt(match[2] || "256")
-
-        assertArgument((!match[2] || match[2] === String(size)) && (size % 8 === 0) && size !== 0 && size <= 256, "invalid number type", "type", type);
-
-        if (isArray) { size = 256; }
-
-        if (signed) { value = toTwos(value, size); }
-
-        return getBytes(zeroPadValue(toBeArray(value), size / 8));
+    if (signed) {
+      value = toTwos(value, size)
     }
 
-    match = type.match(regexBytes);
-    if (match) {
-        const size = parseInt(match[1]);
+    return getBytes(zeroPadValue(toBeArray(value), size / 8))
+  }
 
-        assertArgument(String(size) === match[1] && size !== 0 && size <= 32, "invalid bytes type", "type", type);
-        assertArgument(dataLength(value) === size, `invalid value for ${ type }`, "value", value);
+  match = type.match(regexBytes)
+  if (match) {
+    const size = parseInt(match[1])
 
-        if (isArray) { return getBytes(zeroPadBytes(value, 32)); }
-        return value;
+    assertArgument(String(size) === match[1] && size !== 0 && size <= 32, 'invalid bytes type', 'type', type)
+    assertArgument(dataLength(value) === size, `invalid value for ${type}`, 'value', value)
+
+    if (isArray) {
+      return getBytes(zeroPadBytes(value, 32))
     }
+    return value
+  }
 
-    match = type.match(regexArray);
-    if (match && Array.isArray(value)) {
-        const baseType = match[1];
-        const count = parseInt(match[2] || String(value.length));
-        assertArgument(count === value.length, `invalid array length for ${ type }`, "value", value);
+  match = type.match(regexArray)
+  if (match && Array.isArray(value)) {
+    const baseType = match[1]
+    const count = parseInt(match[2] || String(value.length))
+    assertArgument(count === value.length, `invalid array length for ${type}`, 'value', value)
 
-        const result: Array<Uint8Array> = [];
-        value.forEach(function(value) {
-            result.push(_pack(chainNamespace, baseType, value, true));
-        });
-        return getBytes(concat(result));
-    }
+    const result: Array<Uint8Array> = []
+    value.forEach(function (value) {
+      result.push(_pack(chainNamespace, baseType, value, true))
+    })
+    return getBytes(concat(result))
+  }
 
-    assertArgument(false, "invalid type", "type", type)
+  assertArgument(false, 'invalid type', 'type', type)
 }
 
 // @TODO: Array Enum
@@ -82,13 +85,13 @@ function _pack(chainNamespace: ChainNamespace, type: string, value: any, isArray
  *       //_result:
  */
 export function solidityPacked(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
-    assertArgument(types.length === values.length, "wrong number of values; expected ${ types.length }", "values", values);
+  assertArgument(types.length === values.length, 'wrong number of values; expected ${ types.length }', 'values', values)
 
-    const tight: Array<Uint8Array> = [];
-    types.forEach(function(type, index) {
-        tight.push(_pack(chainNamespace, type, values[index]));
-    });
-    return hexlify(concat(tight));
+  const tight: Array<Uint8Array> = []
+  types.forEach(function (type, index) {
+    tight.push(_pack(chainNamespace, type, values[index]))
+  })
+  return hexlify(concat(tight))
 }
 
 /**
@@ -101,7 +104,7 @@ export function solidityPacked(chainNamespace: ChainNamespace, types: ReadonlyAr
  *       //_result:
  */
 export function solidityPackedKeccak256(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
-    return _keccak256(solidityPacked(chainNamespace, types, values));
+  return _keccak256(solidityPacked(chainNamespace, types, values))
 }
 
 /**
@@ -114,5 +117,5 @@ export function solidityPackedKeccak256(chainNamespace: ChainNamespace, types: R
  *       //_result:
  */
 export function solidityPackedSha256(chainNamespace: ChainNamespace, types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
-    return _sha256(solidityPacked(chainNamespace, types, values));
+  return _sha256(solidityPacked(chainNamespace, types, values))
 }

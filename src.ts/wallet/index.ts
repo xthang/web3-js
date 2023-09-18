@@ -17,16 +17,16 @@
  *  @_section: api/wallet:Wallets  [about-wallets]
  */
 
-export type { IWallet } from './base'
+export type { IWallet } from './base.js'
 
-export { defaultPath, getAccountPath, getIndexedAccountPath, HDNodeWallet, HDNodeVoidWallet } from './hdwallet'
-export { Wallet } from './wallet'
-export { Eip155Wallet } from './wallet-eip155'
-export { SolanaWallet, TransactionType as SolanaTransactionType } from './wallet-solana'
-export { TronWallet, TransactionType as TronTransactionType } from './wallet-tron'
+export { defaultPath, getAccountPath, getIndexedAccountPath, HDNodeWallet, HDNodeVoidWallet } from './hdwallet.js'
+export { Wallet } from './wallet.js'
+export { Eip155Wallet } from './wallet-eip155.js'
+export { SolanaWallet, TransactionType as SolanaTransactionType } from './wallet-solana.js'
+export { TronWallet, TransactionType as TronTransactionType } from './wallet-tron.js'
 
-export { isCrowdsaleJson, decryptCrowdsaleJson } from './json-crowdsale'
-export { isKeystoreJson, decryptKeystoreJsonSync, decryptKeystoreJson, encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore'
-export { Mnemonic } from './mnemonic'
-export type { CrowdsaleAccount } from './json-crowdsale'
-export type { KeystoreAccount, EncryptOptions } from './json-keystore'
+export { isCrowdsaleJson, decryptCrowdsaleJson } from './json-crowdsale.js'
+export { isKeystoreJson, decryptKeystoreJsonSync, decryptKeystoreJson, encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore.js'
+export { Mnemonic } from './mnemonic.js'
+export type { CrowdsaleAccount } from './json-crowdsale.js'
+export type { KeystoreAccount, EncryptOptions } from './json-keystore.js'

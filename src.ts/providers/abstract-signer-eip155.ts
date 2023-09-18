@@ -3,13 +3,13 @@
  *
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import { resolveAddress } from '../address/index'
-import { TransactionLike } from '../transaction/index'
-import { resolveProperties, assert, assertArgument } from '../utils/index'
-import { checkProvider } from './abstract-signer'
-import { copyRequest } from './provider'
-import type { BlockTag, Provider, TransactionRequest } from './provider'
-import { AbstractSigner } from './index'
+import { resolveAddress } from '../address/index.js'
+import { TransactionLike } from '../transaction/index.js'
+import { resolveProperties, assert, assertArgument } from '../utils/index.js'
+import { checkProvider } from './abstract-signer.js'
+import { copyRequest } from './provider.js'
+import type { BlockTag, Provider, TransactionRequest } from './provider.js'
+import { AbstractSigner } from './index.js'
 
 async function populate(signer: AbstractEip155Signer, tx: TransactionRequest): Promise<TransactionLike<string>> {
   const pop: any = copyRequest(tx)

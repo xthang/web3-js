@@ -4,24 +4,22 @@
  *  @_subsection: api/crypto:Hash Functions [about-crypto-hashing]
  */
 
-import { keccak_256 } from "@noble/hashes/sha3";
+import { keccak_256 } from '@noble/hashes/sha3'
 
-import { getBytes, hexlify } from "../utils/index";
+import { getBytes, hexlify } from '../utils/index.js'
+import type { BytesLike } from '../utils/index.js'
 
-import type { BytesLike } from "../utils/index";
-
-
-let locked = false;
+let locked = false
 
 const _keccak256 = function (data: Uint8Array): Uint8Array {
-    return keccak_256(data);
+  return keccak_256(data)
 }
 
-let __keccak256: (data: Uint8Array) => Uint8Array = _keccak256;
+let __keccak256: (data: Uint8Array) => Uint8Array = _keccak256
 
 export function keccak256(_data: BytesLike): Uint8Array {
-    const data = getBytes(_data, "data");
-    return __keccak256(data)
+  const data = getBytes(_data, 'data')
+  return __keccak256(data)
 }
 
 /**
@@ -47,12 +45,16 @@ export function keccak256(_data: BytesLike): Uint8Array {
  *    //_error:
  */
 export function keccak256_hex(_data: BytesLike): string {
-    return hexlify(keccak256(_data));
+  return hexlify(keccak256(_data))
 }
-keccak256._ = _keccak256;
-keccak256.lock = function (): void { locked = true; }
+keccak256._ = _keccak256
+keccak256.lock = function (): void {
+  locked = true
+}
 keccak256.register = function (func: (data: Uint8Array) => Uint8Array) {
-    if (locked) { throw new TypeError("keccak256 is locked"); }
-    __keccak256 = func;
+  if (locked) {
+    throw new TypeError('keccak256 is locked')
+  }
+  __keccak256 = func
 }
-Object.freeze(keccak256);
+Object.freeze(keccak256)

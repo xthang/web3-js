@@ -2,12 +2,12 @@ import * as ed25519 from '@noble/ed25519'
 import { sha512 } from '@noble/hashes/sha512'
 import { hexToBytes } from '@noble/hashes/utils'
 import { Keypair } from '@solana/web3.js'
-import { formatHexAddress, getBase58CheckAddress } from '../address/index'
-import { TRON_ADDRESS_PREFIX } from '../constants/addresses'
-import { keccak256_hex, SigningKey } from '../crypto/index'
-import type { SignatureLike } from '../crypto/index'
-import { ChainNamespace } from '../providers/network'
-import { BytesLike } from '../utils/index'
+import { formatHexAddress, getBase58CheckAddress } from '../address/index.js'
+import { TRON_ADDRESS_PREFIX } from '../constants/addresses.js'
+import { keccak256_hex, SigningKey } from '../crypto/index.js'
+import type { SignatureLike } from '../crypto/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { BytesLike } from '../utils/index.js'
 
 ed25519.utils.sha512Sync = (...m) => sha512(ed25519.utils.concatBytes(...m))
 

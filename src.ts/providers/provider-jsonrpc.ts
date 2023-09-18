@@ -9,20 +9,20 @@
 
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
-import { getAddress, resolveAddress } from '../address/index'
-import { TypedDataEncoder } from '../hash/index'
-import type { TypedDataDomain, TypedDataField } from '../hash/index'
-import type { TransactionLike } from '../transaction/index'
-import { defineProperties, getBigInt, hexlify, toUtf8Bytes, makeError, assert, assertArgument, FetchRequest, resolveProperties } from '../utils/index'
-import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider'
-import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider'
-import { AbstractSigner } from './abstract-signer'
-import { ChainNamespace, Network } from './network'
-import type { Networkish } from './network'
-import type { Provider, TransactionRequest, TransactionResponse } from './provider'
-import type { Signer } from './signer'
-import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid'
-import { PollingEventSubscriber } from './subscriber-polling'
+import { getAddress, resolveAddress } from '../address/index.js'
+import { TypedDataEncoder } from '../hash/index.js'
+import type { TypedDataDomain, TypedDataField } from '../hash/index.js'
+import type { TransactionLike } from '../transaction/index.js'
+import { defineProperties, getBigInt, hexlify, toUtf8Bytes, makeError, assert, assertArgument, FetchRequest, resolveProperties } from '../utils/index.js'
+import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js'
+import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js'
+import { AbstractSigner } from './abstract-signer.js'
+import { ChainNamespace, Network } from './network.js'
+import type { Networkish } from './network.js'
+import type { Provider, TransactionRequest, TransactionResponse } from './provider.js'
+import type { Signer } from './signer.js'
+import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js'
+import { PollingEventSubscriber } from './subscriber-polling.js'
 
 type Timer = ReturnType<typeof setTimeout>
 
@@ -590,7 +590,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
     this.#notReady.resolve()
     this.#notReady = null
-
     ;(async () => {
       // Bootstrap the network
       while (this.#network == null) {

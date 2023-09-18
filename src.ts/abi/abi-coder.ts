@@ -13,222 +13,229 @@
 
 // See: https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
 
-import { ChainNamespace } from "../providers";
-import {
-    assertArgumentCount, assertArgument, getBytes, hexlify, makeError,
-    BytesLike,
-    CallExceptionAction, CallExceptionError, CallExceptionTransaction
-} from "../utils/index";
-import { Coder, Reader, Result, Writer } from "./coders/abstract-coder";
-import { AddressCoder } from "./coders/address";
-import { ArrayCoder } from "./coders/array";
-import { BooleanCoder } from "./coders/boolean";
-import { BytesCoder } from "./coders/bytes";
-import { FixedBytesCoder } from "./coders/fixed-bytes";
-import { NullCoder } from "./coders/null";
-import { NumberCoder } from "./coders/number";
-import { StringCoder } from "./coders/string";
-import { TupleCoder } from "./coders/tuple";
-import { ParamType } from "./fragments";
+import { ChainNamespace } from '../providers/index.js'
+import { assertArgumentCount, assertArgument, getBytes, hexlify, makeError, BytesLike, CallExceptionAction, CallExceptionError, CallExceptionTransaction } from '../utils/index.js'
+import { Coder, Reader, Result, Writer } from './coders/abstract-coder.js'
+import { AddressCoder } from './coders/address.js'
+import { ArrayCoder } from './coders/array.js'
+import { BooleanCoder } from './coders/boolean.js'
+import { BytesCoder } from './coders/bytes.js'
+import { FixedBytesCoder } from './coders/fixed-bytes.js'
+import { NullCoder } from './coders/null.js'
+import { NumberCoder } from './coders/number.js'
+import { StringCoder } from './coders/string.js'
+import { TupleCoder } from './coders/tuple.js'
+import { ParamType } from './fragments.js'
 
 // https://docs.soliditylang.org/en/v0.8.17/control-structures.html
-const PanicReasons: Map<number, string> = new Map();
-PanicReasons.set(0x00, "GENERIC_PANIC");
-PanicReasons.set(0x01, "ASSERT_FALSE");
-PanicReasons.set(0x11, "OVERFLOW");
-PanicReasons.set(0x12, "DIVIDE_BY_ZERO");
-PanicReasons.set(0x21, "ENUM_RANGE_ERROR");
-PanicReasons.set(0x22, "BAD_STORAGE_DATA");
-PanicReasons.set(0x31, "STACK_UNDERFLOW");
-PanicReasons.set(0x32, "ARRAY_RANGE_ERROR");
-PanicReasons.set(0x41, "OUT_OF_MEMORY");
-PanicReasons.set(0x51, "UNINITIALIZED_FUNCTION_CALL");
+const PanicReasons: Map<number, string> = new Map()
+PanicReasons.set(0x00, 'GENERIC_PANIC')
+PanicReasons.set(0x01, 'ASSERT_FALSE')
+PanicReasons.set(0x11, 'OVERFLOW')
+PanicReasons.set(0x12, 'DIVIDE_BY_ZERO')
+PanicReasons.set(0x21, 'ENUM_RANGE_ERROR')
+PanicReasons.set(0x22, 'BAD_STORAGE_DATA')
+PanicReasons.set(0x31, 'STACK_UNDERFLOW')
+PanicReasons.set(0x32, 'ARRAY_RANGE_ERROR')
+PanicReasons.set(0x41, 'OUT_OF_MEMORY')
+PanicReasons.set(0x51, 'UNINITIALIZED_FUNCTION_CALL')
 
-const paramTypeBytes = new RegExp(/^bytes([0-9]*)$/);
-const paramTypeNumber = new RegExp(/^(u?int)([0-9]*)$/);
+const paramTypeBytes = new RegExp(/^bytes([0-9]*)$/)
+const paramTypeNumber = new RegExp(/^(u?int)([0-9]*)$/)
 
+const defaultCoder: { [key: string]: null | AbiCoder } = {}
 
-const defaultCoder: { [key: string]: null | AbiCoder } = {};
+function getBuiltinCallException(
+  action: CallExceptionAction,
+  tx: { to?: null | string; from?: null | string; value?: string; data?: string },
+  data: null | BytesLike,
+  abiCoder: AbiCoder
+): CallExceptionError {
+  let message = 'missing revert data'
 
+  let reason: null | string = null
+  const invocation: any = null
+  let revert: null | { signature: string; name: string; args: Array<any> } = null
 
-function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | string, from?: null | string, value?: string, data?: string }, data: null | BytesLike, abiCoder: AbiCoder): CallExceptionError {
-    let message = "missing revert data";
+  if (data) {
+    message = 'execution reverted'
 
-    let reason: null | string = null;
-    const invocation: any = null;
-    let revert: null | { signature: string, name: string, args: Array<any> } = null;
+    const bytes = getBytes(data)
+    data = hexlify(data)
 
-    if (data) {
-        message = "execution reverted";
-
-        const bytes = getBytes(data);
-        data = hexlify(data);
-
-        if (bytes.length === 0) {
-            message += " (no data present; likely require(false) occurred";
-            reason = "require(false)";
-
-        } else if (bytes.length % 32 !== 4) {
-            message += " (could not decode reason; invalid data length)";
-
-        } else if (hexlify(bytes.slice(0, 4)) === "0x08c379a0") {
-            // Error(string)
-            try {
-                reason = abiCoder.decode(["string"], bytes.slice(4))[0]
-                revert = {
-                    signature: "Error(string)",
-                    name: "Error",
-                    args: [reason]
-                };
-                message += `: ${JSON.stringify(reason)}`;
-
-            } catch (error) {
-                message += " (could not decode reason; invalid string data)";
-            }
-
-        } else if (hexlify(bytes.slice(0, 4)) === "0x4e487b71") {
-            // Panic(uint256)
-            try {
-                const code = Number(abiCoder.decode(["uint256"], bytes.slice(4))[0]);
-                revert = {
-                    signature: "Panic(uint256)",
-                    name: "Panic",
-                    args: [code]
-                };
-                reason = `Panic due to ${PanicReasons.get(code) || "UNKNOWN"}(${code})`;
-                message += `: ${reason}`;
-            } catch (error) {
-                message += " (could not decode panic code)";
-            }
-        } else {
-            message += " (unknown custom error)";
+    if (bytes.length === 0) {
+      message += ' (no data present; likely require(false) occurred'
+      reason = 'require(false)'
+    } else if (bytes.length % 32 !== 4) {
+      message += ' (could not decode reason; invalid data length)'
+    } else if (hexlify(bytes.slice(0, 4)) === '0x08c379a0') {
+      // Error(string)
+      try {
+        reason = abiCoder.decode(['string'], bytes.slice(4))[0]
+        revert = {
+          signature: 'Error(string)',
+          name: 'Error',
+          args: [reason]
         }
+        message += `: ${JSON.stringify(reason)}`
+      } catch (error) {
+        message += ' (could not decode reason; invalid string data)'
+      }
+    } else if (hexlify(bytes.slice(0, 4)) === '0x4e487b71') {
+      // Panic(uint256)
+      try {
+        const code = Number(abiCoder.decode(['uint256'], bytes.slice(4))[0])
+        revert = {
+          signature: 'Panic(uint256)',
+          name: 'Panic',
+          args: [code]
+        }
+        reason = `Panic due to ${PanicReasons.get(code) || 'UNKNOWN'}(${code})`
+        message += `: ${reason}`
+      } catch (error) {
+        message += ' (could not decode panic code)'
+      }
+    } else {
+      message += ' (unknown custom error)'
     }
+  }
 
-    const transaction: CallExceptionTransaction = {
-        from: tx.from ?? undefined,
-        to: tx.to ?? undefined,
-        value: tx.value,
-        data: tx.data
-    };
+  const transaction: CallExceptionTransaction = {
+    from: tx.from ?? undefined,
+    to: tx.to ?? undefined,
+    value: tx.value,
+    data: tx.data
+  }
 
-    return makeError(message, "CALL_EXCEPTION", {
-        action, data: data as string, reason, transaction, invocation, revert
-    });
+  return makeError(message, 'CALL_EXCEPTION', {
+    action,
+    data: data as string,
+    reason,
+    transaction,
+    invocation,
+    revert
+  })
 }
 
 /**
-  * About AbiCoder
-  */
+ * About AbiCoder
+ */
 export class AbiCoder {
-    readonly #chainNamespace: ChainNamespace
+  readonly #chainNamespace: ChainNamespace
 
-    constructor(chainNamespace: ChainNamespace) {
-        this.#chainNamespace = chainNamespace
+  constructor(chainNamespace: ChainNamespace) {
+    this.#chainNamespace = chainNamespace
+  }
+
+  #getCoder(param: ParamType): Coder {
+    if (param.isArray()) {
+      return new ArrayCoder(this.#getCoder(param.arrayChildren), param.arrayLength, param.name)
     }
 
-    #getCoder(param: ParamType): Coder {
-        if (param.isArray()) {
-            return new ArrayCoder(this.#getCoder(param.arrayChildren), param.arrayLength, param.name);
-        }
-
-        if ((param as ParamType).isTuple()) {
-            return new TupleCoder((param as ParamType).components!.map((c) => this.#getCoder(c)), (param as ParamType).name);
-        }
-
-        param = param as ParamType
-        switch (param.baseType) {
-            case "address":
-                return new AddressCoder(this.#chainNamespace, param.name);
-            case "bool":
-                return new BooleanCoder(param.name);
-            case "string":
-                return new StringCoder(param.name);
-            case "bytes":
-                return new BytesCoder(param.name);
-            case "":
-                return new NullCoder(param.name);
-        }
-
-        // u?int[0-9]*
-        let match = param.type.match(paramTypeNumber);
-        if (match) {
-            const size = parseInt(match[2] || "256");
-            assertArgument(size !== 0 && size <= 256 && (size % 8) === 0,
-                "invalid " + match[1] + " bit length", "param", param);
-            return new NumberCoder(size / 8, (match[1] === "int"), param.name);
-        }
-
-        // bytes[0-9]+
-        match = param.type.match(paramTypeBytes);
-        if (match) {
-            const size = parseInt(match[1]);
-            assertArgument(size !== 0 && size <= 32, "invalid bytes length", "param", param);
-            return new FixedBytesCoder(size, param.name);
-        }
-
-        assertArgument(false, "invalid type", "type", param.type);
+    if ((param as ParamType).isTuple()) {
+      return new TupleCoder(
+        (param as ParamType).components!.map((c) => this.#getCoder(c)),
+        (param as ParamType).name
+      )
     }
 
-    /**
-     *  Get the default values for the given %%types%%.
-     *
-     *  For example, a ``uint`` is by default ``0`` and ``bool``
-     *  is by default ``false``.
-     */
-    getDefaultValue(types: ReadonlyArray<string | ParamType>): Result {
-        const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)));
-        const coder = new TupleCoder(coders, "_");
-        return coder.defaultValue();
+    param = param as ParamType
+    switch (param.baseType) {
+      case 'address':
+        return new AddressCoder(this.#chainNamespace, param.name)
+      case 'bool':
+        return new BooleanCoder(param.name)
+      case 'string':
+        return new StringCoder(param.name)
+      case 'bytes':
+        return new BytesCoder(param.name)
+      case '':
+        return new NullCoder(param.name)
     }
 
-    /**
-     *  Encode the %%values%% as the %%types%% into ABI data.
-     *
-     *  @returns DataHexstring
-     */
-    encode(types: ReadonlyArray<string | ParamType>, values: ReadonlyArray<any>): string {
-        assertArgumentCount(values.length, types.length, "types/values length mismatch");
-
-        const coders = types.map((type) => this.#getCoder(ParamType.from(type)));
-        const coder = (new TupleCoder(coders, "_"));
-
-        const writer = new Writer();
-        coder.encode(writer, values);
-        return writer.data;
+    // u?int[0-9]*
+    let match = param.type.match(paramTypeNumber)
+    if (match) {
+      const size = parseInt(match[2] || '256')
+      assertArgument(size !== 0 && size <= 256 && size % 8 === 0, 'invalid ' + match[1] + ' bit length', 'param', param)
+      return new NumberCoder(size / 8, match[1] === 'int', param.name)
     }
 
-    /**
-     *  Decode the ABI %%data%% as the %%types%% into values.
-     *
-     *  If %%loose%% decoding is enabled, then strict padding is
-     *  not enforced. Some older versions of Solidity incorrectly
-     *  padded event data emitted from ``external`` functions.
-     */
-    decode(types: ReadonlyArray<string | ParamType>, data: BytesLike, loose?: boolean): Result {
-        const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)));
-        const coder = new TupleCoder(coders, "_");
-        return coder.decode(new Reader(data, loose));
+    // bytes[0-9]+
+    match = param.type.match(paramTypeBytes)
+    if (match) {
+      const size = parseInt(match[1])
+      assertArgument(size !== 0 && size <= 32, 'invalid bytes length', 'param', param)
+      return new FixedBytesCoder(size, param.name)
     }
 
-    /**
-     *  Returns the shared singleton instance of a default [[AbiCoder]].
-     *
-     *  On the first call, the instance is created internally.
-     */
-    static defaultAbiCoder(chainNamespace: ChainNamespace): AbiCoder {
-        if (defaultCoder[chainNamespace] == null) {
-            defaultCoder[chainNamespace] = new AbiCoder(chainNamespace);
-        }
-        return defaultCoder[chainNamespace];
-    }
+    assertArgument(false, 'invalid type', 'type', param.type)
+  }
 
-    /**
-     *  Returns an ethers-compatible [[CallExceptionError]] Error for the given
-     *  result %%data%% for the [[CallExceptionAction]] %%action%% against
-     *  the Transaction %%tx%%.
-     */
-    static getBuiltinCallException(chainNamespace: ChainNamespace, action: CallExceptionAction, tx: { to?: null | string, from?: null | string, data?: string }, data: null | BytesLike): CallExceptionError {
-        return getBuiltinCallException(action, tx, data, AbiCoder.defaultAbiCoder(chainNamespace));
+  /**
+   *  Get the default values for the given %%types%%.
+   *
+   *  For example, a ``uint`` is by default ``0`` and ``bool``
+   *  is by default ``false``.
+   */
+  getDefaultValue(types: ReadonlyArray<string | ParamType>): Result {
+    const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)))
+    const coder = new TupleCoder(coders, '_')
+    return coder.defaultValue()
+  }
+
+  /**
+   *  Encode the %%values%% as the %%types%% into ABI data.
+   *
+   *  @returns DataHexstring
+   */
+  encode(types: ReadonlyArray<string | ParamType>, values: ReadonlyArray<any>): string {
+    assertArgumentCount(values.length, types.length, 'types/values length mismatch')
+
+    const coders = types.map((type) => this.#getCoder(ParamType.from(type)))
+    const coder = new TupleCoder(coders, '_')
+
+    const writer = new Writer()
+    coder.encode(writer, values)
+    return writer.data
+  }
+
+  /**
+   *  Decode the ABI %%data%% as the %%types%% into values.
+   *
+   *  If %%loose%% decoding is enabled, then strict padding is
+   *  not enforced. Some older versions of Solidity incorrectly
+   *  padded event data emitted from ``external`` functions.
+   */
+  decode(types: ReadonlyArray<string | ParamType>, data: BytesLike, loose?: boolean): Result {
+    const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)))
+    const coder = new TupleCoder(coders, '_')
+    return coder.decode(new Reader(data, loose))
+  }
+
+  /**
+   *  Returns the shared singleton instance of a default [[AbiCoder]].
+   *
+   *  On the first call, the instance is created internally.
+   */
+  static defaultAbiCoder(chainNamespace: ChainNamespace): AbiCoder {
+    if (defaultCoder[chainNamespace] == null) {
+      defaultCoder[chainNamespace] = new AbiCoder(chainNamespace)
     }
+    return defaultCoder[chainNamespace]
+  }
+
+  /**
+   *  Returns an ethers-compatible [[CallExceptionError]] Error for the given
+   *  result %%data%% for the [[CallExceptionAction]] %%action%% against
+   *  the Transaction %%tx%%.
+   */
+  static getBuiltinCallException(
+    chainNamespace: ChainNamespace,
+    action: CallExceptionAction,
+    tx: { to?: null | string; from?: null | string; data?: string },
+    data: null | BytesLike
+  ): CallExceptionError {
+    return getBuiltinCallException(action, tx, data, AbiCoder.defaultAbiCoder(chainNamespace))
+  }
 }

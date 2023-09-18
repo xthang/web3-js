@@ -1,10 +1,9 @@
 import { Transaction } from '@solana/web3.js'
-import type { EventFragment, FunctionFragment, Result, Typed } from '../abi/index'
-import type { TransactionRequest, PreparedTransactionRequest, TopicFilter } from '../providers/index'
-import { ChainNamespace } from '../providers/network'
-import { TronTransactionType } from '../wallet'
-
-import type { ContractTransactionResponse } from './wrappers'
+import type { EventFragment, FunctionFragment, Result, Typed } from '../abi/index.js'
+import type { TransactionRequest, PreparedTransactionRequest, TopicFilter } from '../providers/index.js'
+import { ChainNamespace } from '../providers/network.js'
+import { TronTransactionType } from '../wallet/index.js'
+import type { ContractTransactionResponse } from './wrappers.js'
 
 // The types of events a Contract can listen for
 export type ContractEventName = string | ContractEvent | TopicFilter | DeferredTopicFilter

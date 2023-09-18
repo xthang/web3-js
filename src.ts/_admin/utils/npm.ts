@@ -1,35 +1,37 @@
-import { FetchRequest } from "../../utils/index";
+import { FetchRequest } from '../../utils/index.js'
 
-const cache: Record<string, any> = { };
+const cache: Record<string, any> = {}
 
 export async function _getNpmPackage(name: string): Promise<any> {
-    if (!cache[name]) {
-        const resp = await (new FetchRequest("https://registry.npmjs.org/" + name)).send();
-        resp.assertOk();
-        cache[name] = resp.bodyJson;
-    }
+  if (!cache[name]) {
+    const resp = await new FetchRequest('https://registry.npmjs.org/' + name).send()
+    resp.assertOk()
+    cache[name] = resp.bodyJson
+  }
 
-    return cache[name] || null;
+  return cache[name] || null
 }
 
 export type Version = {
-    version: string;
-    gitHead: string;
-    date: string;
-};
+  version: string
+  gitHead: string
+  date: string
+}
 
 export async function getVersions(name: string): Promise<Array<Version>> {
-    const result: Array<Version> = [ ];
+  const result: Array<Version> = []
 
-    const pkg = await _getNpmPackage(name);
-    for (const version in pkg.versions) {
-        const gitHead = pkg.versions[version].gitHead;
-        const date = pkg.time[version];
-        if (gitHead == null || date == null) { continue; }
-        result.push({ date, gitHead, version });
+  const pkg = await _getNpmPackage(name)
+  for (const version in pkg.versions) {
+    const gitHead = pkg.versions[version].gitHead
+    const date = pkg.time[version]
+    if (gitHead == null || date == null) {
+      continue
     }
+    result.push({ date, gitHead, version })
+  }
 
-    return result;
+  return result
 }
 /*
 (async function() {

@@ -5,11 +5,10 @@
  *  @_subsection api/utils:Recursive-Length Prefix  [about-rlp]
  */
 
-export { decodeRlp } from "./rlp-decode";
-export { encodeRlp } from "./rlp-encode";
+export { decodeRlp } from './rlp-decode.js'
+export { encodeRlp } from './rlp-encode.js'
 
 /**
  *  An RLP-encoded structure.
  */
-export type RlpStructuredData = string | Array<RlpStructuredData>;
-
+export type RlpStructuredData = string | Array<RlpStructuredData>

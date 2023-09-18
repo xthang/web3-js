@@ -1,7 +1,7 @@
 import assert from 'assert'
 
-import { ethers } from '../index'
-import { ChainNamespace } from '../providers/network'
+import { ethers } from '../index.js'
+import { ChainNamespace } from '../providers/network.js'
 
 interface ContractAbi {
   mint: ethers.BaseContractMethod<[ethers.AddressLike], [boolean], ethers.ContractTransactionResponse>

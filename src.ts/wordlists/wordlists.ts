@@ -1,15 +1,14 @@
+import { LangCz } from './lang-cz.js'
+import { LangEn } from './lang-en.js'
+import { LangEs } from './lang-es.js'
+import { LangFr } from './lang-fr.js'
+import { LangIt } from './lang-it.js'
+import { LangJa } from './lang-ja.js'
+import { LangKo } from './lang-ko.js'
+import { LangPt } from './lang-pt.js'
+import { LangZh } from './lang-zh.js'
 
-import { LangCz } from "./lang-cz";
-import { LangEn } from "./lang-en";
-import { LangEs } from "./lang-es";
-import { LangFr } from "./lang-fr";
-import { LangJa } from "./lang-ja";
-import { LangKo } from "./lang-ko";
-import { LangIt } from "./lang-it";
-import { LangPt } from "./lang-pt";
-import { LangZh } from "./lang-zh";
-
-import type { Wordlist } from "./wordlist";
+import type { Wordlist } from './wordlist.js'
 
 /**
  *  The available Wordlists by their
@@ -33,6 +32,6 @@ export const wordlists: Record<string, Wordlist> = {
   pt: LangPt.wordlist(),
   ja: LangJa.wordlist(),
   ko: LangKo.wordlist(),
-  zh_cn: LangZh.wordlist("cn"),
-  zh_tw: LangZh.wordlist("tw"),
-};
+  zh_cn: LangZh.wordlist('cn'),
+  zh_tw: LangZh.wordlist('tw')
+}

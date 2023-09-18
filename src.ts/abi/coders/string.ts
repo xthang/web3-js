@@ -1,29 +1,25 @@
-import { toUtf8Bytes, toUtf8String } from "../../utils/utf8";
-
-import { Typed } from "../typed";
-import { DynamicBytesCoder } from "./bytes";
-
-import type { Reader, Writer } from "./abstract-coder";
-
+import { toUtf8Bytes, toUtf8String } from '../../utils/utf8.js'
+import { Typed } from '../typed.js'
+import type { Reader, Writer } from './abstract-coder.js'
+import { DynamicBytesCoder } from './bytes.js'
 
 /**
  *  @_ignore
  */
 export class StringCoder extends DynamicBytesCoder {
+  constructor(localName: string) {
+    super('string', localName)
+  }
 
-    constructor(localName: string) {
-        super("string", localName);
-    }
+  defaultValue(): string {
+    return ''
+  }
 
-    defaultValue(): string {
-        return "";
-    }
+  encode(writer: Writer, _value: string | Typed): number {
+    return super.encode(writer, toUtf8Bytes(Typed.dereference(_value, 'string')))
+  }
 
-    encode(writer: Writer, _value: string | Typed): number {
-        return super.encode(writer, toUtf8Bytes(Typed.dereference(_value, "string")));
-    }
-
-    decode(reader: Reader): any {
-        return toUtf8String(super.decode(reader));
-    }
+  decode(reader: Reader): any {
+    return toUtf8String(super.decode(reader))
+  }
 }

@@ -1,80 +1,81 @@
-import assert from 'assert';
+import assert from 'assert'
 
-import { wordlists } from "../wordlists/wordlists";
+import { wordlists } from '../wordlists/wordlists.js'
+import type { TestCaseWordlist } from './types.js'
+import { loadTests } from './utils.js'
 
-import { loadTests } from "./utils";
+describe('Check Wordlists', function () {
+  const tests = loadTests<TestCaseWordlist>('wordlists')
 
-import type { TestCaseWordlist } from "./types";
+  tests.forEach((test) => {
+    const wordlist = wordlists[test.locale]
+    if (wordlist == null) {
+      return
+    }
 
+    it(`matches wordlists: ${test.locale}`, function () {
+      const words = test.content.split('\n')
 
+      let check = ''
+      for (let i = 0; i < 2048; i++) {
+        const word = wordlist.getWord(i)
+        check += word + '\n'
+        assert.equal(word, words[i])
+        assert.equal(wordlist.getWordIndex(word), i)
+      }
 
-describe('Check Wordlists', function() {
-    const tests = loadTests<TestCaseWordlist>("wordlists");
+      assert.equal(check, test.content)
+    })
+  })
 
-    tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
-        if (wordlist == null) { return; }
+  tests.forEach((test) => {
+    const wordlist = wordlists[test.locale]
+    if (wordlist == null) {
+      return
+    }
 
-        it(`matches wordlists: ${ test.locale }`, function() {
-            const words = test.content.split('\n');
+    it(`splitting and joining are equivalent: ${test.locale}`, function () {
+      const words: Array<string> = []
+      for (let i = 0; i < 12; i++) {
+        words.push(wordlist.getWord(i))
+      }
 
-            let check = "";
-            for (let i = 0; i < 2048; i++) {
-                let word = wordlist.getWord(i);
-                check += (word + "\n");
-                assert.equal(word, words[i]);
-                assert.equal(wordlist.getWordIndex(word), i);
-            }
+      const phrase = wordlist.join(words)
 
-            assert.equal(check, test.content);
-        });
-    });
+      const words2 = wordlist.split(phrase)
+      const phrase2 = wordlist.join(words2)
 
-    tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
-        if (wordlist == null) { return; }
+      assert.deepStrictEqual(words2, words, 'split words')
+      assert.deepStrictEqual(phrase2, phrase, 're-joined words')
+    })
+  })
 
-        it (`splitting and joining are equivalent: ${ test.locale }`, function() {
-            const words: Array<string> = [ ];
-            for (let i = 0; i < 12; i++) {
-                words.push(wordlist.getWord(i));
-            }
+  tests.forEach((test) => {
+    const wordlist = wordlists[test.locale]
+    if (wordlist == null) {
+      return
+    }
 
-            const phrase = wordlist.join(words);
+    it(`handles out-of-range values: ${test.locale}`, function () {
+      assert.equal(wordlist.getWordIndex('foobar'), -1)
 
-            const words2 = wordlist.split(phrase);
-            const phrase2 = wordlist.join(words2);
+      assert.throws(
+        () => {
+          wordlist.getWord(-1)
+        },
+        (error: any) => {
+          return error.code === 'INVALID_ARGUMENT' && error.message.match(/^invalid word index/) && error.argument === 'index' && error.value === -1
+        }
+      )
 
-            assert.deepStrictEqual(words2, words, "split words");
-            assert.deepStrictEqual(phrase2, phrase, "re-joined words");
-        });
-    });
-
-    tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
-        if (wordlist == null) { return; }
-
-        it(`handles out-of-range values: ${ test.locale }`, function() {
-            assert.equal(wordlist.getWordIndex("foobar"), -1);
-
-            assert.throws(() => {
-                wordlist.getWord(-1);
-            }, (error: any) => {
-                return (error.code === "INVALID_ARGUMENT" &&
-                    error.message.match(/^invalid word index/) &&
-                    error.argument === "index" &&
-                    error.value === -1);
-            });
-
-            assert.throws(() => {
-                wordlist.getWord(2048);
-            }, (error: any) => {
-                return (error.code === "INVALID_ARGUMENT" &&
-                    error.message.match(/^invalid word index/) &&
-                    error.argument === "index" &&
-                    error.value === 2048);
-            });
-        });
-
-    });
-});
+      assert.throws(
+        () => {
+          wordlist.getWord(2048)
+        },
+        (error: any) => {
+          return error.code === 'INVALID_ARGUMENT' && error.message.match(/^invalid word index/) && error.argument === 'index' && error.value === 2048
+        }
+      )
+    })
+  })
+})

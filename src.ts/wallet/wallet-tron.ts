@@ -1,11 +1,11 @@
-import { resolveAddressToHex, getAddress } from '../address'
-import { TRON_ADDRESS_PREFIX } from '../constants/addresses'
-import { SigningKey } from '../crypto'
-import { hashMessage, TypedDataDomain, TypedDataField, TypedDataEncoder } from '../hash'
-import { AbstractTronSigner, ChainNamespace, TransactionRequest, TronProvider } from '../providers'
-import { computeAddress } from '../transaction'
-import { assertArgument, resolveProperties, assert } from '../utils'
-import { IWallet } from './base'
+import { resolveAddressToHex, getAddress } from '../address/index.js'
+import { TRON_ADDRESS_PREFIX } from '../constants/addresses.js'
+import { SigningKey } from '../crypto/index.js'
+import { hashMessage, TypedDataDomain, TypedDataField, TypedDataEncoder } from '../hash/index.js'
+import { AbstractTronSigner, ChainNamespace, TransactionRequest, TronProvider } from '../providers/index.js'
+import { computeAddress } from '../transaction/index.js'
+import { assertArgument, resolveProperties, assert } from '../utils/index.js'
+import { IWallet } from './base.js'
 
 export enum TransactionType {
   sendTrx = 1,
@@ -110,7 +110,7 @@ export class TronWallet extends AbstractTronSigner implements IWallet {
           tx.tron.function,
           {
             feeLimit: (tx.gasLimit as number) * (tx.gasPrice as number),
-            callValue: typeof tx.value === 'string' ? parseInt(tx.value, 16) : tx.value,
+            callValue: typeof tx.value === 'string' ? parseInt(tx.value, 16) : tx.value
             // tokenValue: tx.tron.tokenValue,
             // tokenId: tx.tron.tokenId
           },

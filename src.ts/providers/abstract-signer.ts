@@ -3,12 +3,12 @@
  *
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import type { TypedDataDomain, TypedDataField } from '../hash/index'
-import { Transaction } from '../transaction/index'
-import type { TransactionLike } from '../transaction/index'
-import { defineProperties, assert } from '../utils/index'
-import type { Provider, TransactionRequest, TransactionResponse } from './provider'
-import type { Signer } from './signer'
+import type { TypedDataDomain, TypedDataField } from '../hash/index.js'
+import { Transaction } from '../transaction/index.js'
+import type { TransactionLike } from '../transaction/index.js'
+import { defineProperties, assert } from '../utils/index.js'
+import type { Provider, TransactionRequest, TransactionResponse } from './provider.js'
+import type { Signer } from './signer.js'
 
 export function checkProvider(signer: AbstractSigner, operation: string): Provider {
   if (signer.provider) {

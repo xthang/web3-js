@@ -13,7 +13,7 @@
  *  @_section: api/address:Addresses  [about-addresses]
  */
 
-null;
+null
 
 /**
  *  An interface for objects which have an address, and can
@@ -24,33 +24,33 @@ null;
  *  the [balance](Provider-getBalance).
  */
 export interface Addressable {
-    /**
-     *  Get the object address.
-     */
-    getAddress(): Promise<string>;
+  /**
+   *  Get the object address.
+   */
+  getAddress(): Promise<string>
 }
 
 /**
  *  Anything that can be used to return or resolve an address.
  */
-export type AddressLike = string | Promise<string> | Addressable;
+export type AddressLike = string | Promise<string> | Addressable
 
 /**
  *  An interface for any object which can resolve an ENS name.
  */
 export interface NameResolver {
-    /**
-     *  Resolve to the address for the ENS %%name%%.
-     *
-     *  Resolves to ``null`` if the name is unconfigued. Use
-     *  [[resolveAddress]] (passing this object as %%resolver%%) to
-     *  throw for names that are unconfigured.
-     */
-    resolveName(name: string): Promise<null | string>;
+  /**
+   *  Resolve to the address for the ENS %%name%%.
+   *
+   *  Resolves to ``null`` if the name is unconfigued. Use
+   *  [[resolveAddress]] (passing this object as %%resolver%%) to
+   *  throw for names that are unconfigured.
+   */
+  resolveName(name: string): Promise<null | string>
 }
 
-export * from "./address";
+export * from './address.js'
 
-export * from "./contract-address";
+export { getCreateAddress, getCreate2Address } from './contract-address.js'
 
-export * from "./checks";
+export * from './checks.js'

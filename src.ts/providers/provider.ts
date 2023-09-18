@@ -1,15 +1,15 @@
 //import { resolveAddress } from "@ethersproject/address";
 import { Transaction } from '@solana/web3.js'
-import type { AddressLike, NameResolver } from '../address/index'
-import type { Signature } from '../crypto/index'
-import { accessListify } from '../transaction/index'
-import type { AccessList, AccessListish, TransactionLike } from '../transaction/index'
-import { defineProperties, getBigInt, getNumber, hexlify, resolveProperties, assert, assertArgument, isError, makeError } from '../utils/index'
-import type { BigNumberish, EventEmitterable } from '../utils/index'
-import { TronTransactionType } from '../wallet'
-import type { ContractRunner } from './contracts'
-import { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting'
-import { ChainNamespace, Network } from './network'
+import type { AddressLike, NameResolver } from '../address/index.js'
+import type { Signature } from '../crypto/index.js'
+import { accessListify } from '../transaction/index.js'
+import type { AccessList, AccessListish, TransactionLike } from '../transaction/index.js'
+import { defineProperties, getBigInt, getNumber, hexlify, resolveProperties, assert, assertArgument, isError, makeError } from '../utils/index.js'
+import type { BigNumberish, EventEmitterable } from '../utils/index.js'
+import { TronTransactionType } from '../wallet/index.js'
+import type { ContractRunner } from './contracts.js'
+import { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting.js'
+import { ChainNamespace, Network } from './network.js'
 
 const BN_0 = BigInt(0)
 

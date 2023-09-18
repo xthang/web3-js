@@ -1,7 +1,7 @@
-import { ChainNamespace } from '../providers/network'
-import { assert, assertArgument } from '../utils/index'
-import { convertToHexAddress, formatHexAddress, getAddress } from './address'
-import type { Addressable, AddressLike, NameResolver } from './index'
+import { ChainNamespace } from '../providers/network.js'
+import { assert, assertArgument } from '../utils/index.js'
+import { convertToHexAddress, formatHexAddress, getAddress } from './address.js'
+import type { Addressable, AddressLike, NameResolver } from './index.js'
 
 /**
  *  Returns true if %%value%% is an object which implements the

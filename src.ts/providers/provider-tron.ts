@@ -1,7 +1,7 @@
 import TronWeb, { providers } from 'tronweb'
-import { AddressLike, BigNumberish, ChainNamespace, FetchRequest, Listener, Network, Networkish, makeError } from '../ethers'
-import { Block, BlockTag, FeeData, Filter, FilterByBlockHash, Log, Provider, ProviderEvent, TransactionReceipt, TransactionRequest, TransactionResponse } from './provider'
-import { TronJsonRpcProvider } from './provider-jsonrpc-tron'
+import { AddressLike, BigNumberish, ChainNamespace, FetchRequest, Listener, Network, Networkish, makeError } from '../ethers.js'
+import { TronJsonRpcProvider } from './provider-jsonrpc-tron.js'
+import { Block, BlockTag, FeeData, Filter, FilterByBlockHash, Log, Provider, ProviderEvent, TransactionReceipt, TransactionRequest, TransactionResponse } from './provider.js'
 
 export class TronProvider implements Provider {
   chainNamespace = ChainNamespace.tron
